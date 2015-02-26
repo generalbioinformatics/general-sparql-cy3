@@ -60,7 +60,10 @@ public class CyActivator extends AbstractCyActivator
 			File propsFile = new File(FileUtils.getApplicationDir(), "CytoscapeConfiguration/GeneralSparql.properties");
 			// ensure directory exists.
 			propsFile.getParentFile().mkdirs();
-			prefs = new PreferenceManager(propsFile);
+			
+			Properties defaultValues = new Properties();
+			defaultValues.put (MarrsPreference.MARRS_DRIVER, "Empty Jena Model");
+			prefs = new PreferenceManager(propsFile, defaultValues);
 			prefs.load();
 
 			CySwingApplication cySwingApplication = getService(context, CySwingApplication.class);
@@ -145,17 +148,23 @@ public class CyActivator extends AbstractCyActivator
 
 	}
 
+	private MarrsProject getBundledProject() throws JDOMException, IOException
+	{
+		InputStream is = CyActivator.class.getClassLoader().getResourceAsStream("com/generalbioinformatics/cy3/project.xml");
+		MarrsProject bundledProject = MarrsProject.createFromFile(new InputSource(is));			
+		return bundledProject;
+	}
+	
 	public void loadPreviousProject()
 	{
 		try 
 		{
+
 			if (SIMPLIFIED_VERSION)
 			{
-				InputStream is = CyActivator.class.getClassLoader().getResourceAsStream("com/generalbioinformatics/cy3/project.xml");
-
-				MarrsProject bundledProject = MarrsProject.createFromFile(new InputSource(is));				
 				MarrsProject cachedProject = null;
-
+				MarrsProject bundledProject = getBundledProject();
+				
 				File cacheFile = ProjectManager.getProjectCacheFile();
 				if (cacheFile.exists())
 				{
@@ -177,15 +186,33 @@ public class CyActivator extends AbstractCyActivator
 
 				projectMgr.setProject(newest);
 			}
+			
 			else
 			{
 				File projectFile = prefs.getFile(MarrsPreference.MARRS_PROJECT_FILE);
-				if (projectFile.exists())
+				try
 				{
-					projectMgr.loadProject (projectFile);
+					if (projectFile.exists())
+					{
+						projectMgr.loadProject (projectFile);
+					}
+				}
+				catch (JDOMException e) 
+				{
+					// couldn't auto-load, starting with empty project
+				} 
+				catch (IOException e) 
+				{
+					// couldn't auto-load, starting with empty project
+				}
+			
+				if (projectMgr.getProject() == null)
+				{
+					MarrsProject bundledProject = getBundledProject();
+					projectMgr.setProject(bundledProject);
 				}
 			}
-		} 
+		}
 		catch (JDOMException e) 
 		{
 			// couldn't auto-load, starting with empty project
@@ -195,6 +222,7 @@ public class CyActivator extends AbstractCyActivator
 			// couldn't auto-load, starting with empty project
 		}
 
+		
 	}
 
 	private class CheckForUpdatesAction extends AbstractAction
