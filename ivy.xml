@@ -1,0 +1,23 @@
+<ivy-module version="2.0">
+  <info organisation="com.generalbioinformatics" module="com.generalbioinformatics.cy"/>
+  <dependencies>
+    <dependency org="com.generalbioinformatics" name="com.generalbioinformatics.marrs.plus" rev="1.0+"/>
+    <dependency org="com.generalbioinformatics" name="com.generalbioinformatics.rdf" rev="1.0+"/>
+	
+    <dependency org="jgoodies-forms" name="jgoodies-forms" rev="1.2+"/>
+    <dependency org="jsyntaxpane" name="jsyntaxpane" rev="0.9.+"/>
+    <dependency org="nl.helixsoft" name="nl.helixsoft.util" rev="1.0.1"/>
+    <dependency org="nl.helixsoft" name="nl.helixsoft.gui" rev="1.0.1"/>
+<!--    <dependency org="com.springsource" name="com.springsource.org.jdom" rev="1.1.0"/> -->
+	
+	<!-- NOTE: past attempt to upgrade to Jena 2.7.4 was disastrous, due to conflicts with other Cytoscape plugins -->
+	<dependency org="org.apache.jena" name="jena-all" rev="2.12.+"/>
+	<dependency org="org.apache" name="commons-codec" rev="1.5"/>
+	<dependency org="org.apache.felix" name="org.osgi.core" rev="1.4+"/>
+	<dependency org="com.springsource" name="com.springsource.org.jdom" rev="1.1.0"/>
+	
+    <!-- <dependency org="org.apache" name="httpcore" rev="4.1.+"/> -->
+    <!-- <dependency org="org.apache" name="httpclient" rev="4.1.+"/> -->
+    <!-- <dependency org="com.generalbioinformatics" name="genbifo-osgi-slf4j-log4j" rev="1.0.0"/> -->
+  </dependencies>
+</ivy-module>

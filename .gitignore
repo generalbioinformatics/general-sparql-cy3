@@ -1,0 +1,8 @@
+/com.generalbioinformatics*.jar
+/.classpath
+/.project
+/.settings/
+/bin/
+/build/
+/ivycache/
+build.properties
