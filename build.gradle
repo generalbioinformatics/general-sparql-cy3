@@ -1,0 +1,66 @@
+apply plugin: 'java'
+
+def localRepo = 'file://' + new File(System.getProperty('user.home'), 'prg/bundle-repository').absolutePath
+
+repositories {
+	maven {
+        url "http://code.cytoscape.org/nexus/content/repositories/releases/"
+    }
+    ivy {
+    	url localRepo
+    	layout "pattern", {
+            artifact "[artifact]-[revision].[ext]"
+            ivy "[artifact]-[revision]-ivy.xml"
+        }
+    }
+}
+
+configurations {
+    
+    // new configuration - just the embedded dependencies
+    releaseJars
+    
+    // make releaseJars also part of compilation classpath
+    compile {
+    	extendsFrom releaseJars
+    }
+}
+
+dependencies {
+    releaseJars (
+    		'com.springsource:com.springsource.org.jdom:1.1.0',
+    		'com.generalbioinformatics:com.generalbioinformatics.marrs.plus:1.0+',
+    		'com.generalbioinformatics:com.generalbioinformatics.rdf:1.0+',
+    		'jgoodies-forms:jgoodies-forms:1.2+',
+    		'jsyntaxpane:jsyntaxpane:0.9+',
+    		'nl.helixsoft:nl.helixsoft.util:1.0.1',
+    		'nl.helixsoft:nl.helixsoft.gui:1.0.1',
+    		'org.apache.jena:jena-all:2.12.+',
+    		'org.apache:commons-codec:1.5+',
+    		'org.apache.felix:org.osgi.core:1.4+',
+    )
+    compile (    		
+    		'org.cytoscape:app-api:3+',
+    		'org.cytoscape:swing-app-api:3+',
+    )
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+	}
+}
+
+version = '1.0'
+jar {
+
+	// add the release jars as sub-jars
+    from configurations.releaseJars
+    
+    manifest {
+        from 'META-INF/FELIX-MANIFEST.MF'
+    }
+    
+}
