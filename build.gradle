@@ -53,7 +53,8 @@ sourceSets {
 	}
 }
 
-version = '1.0'
+version = '1.11.' + new Date().format('yyMMdd')
+
 jar {
 
 	// add the release jars as sub-jars

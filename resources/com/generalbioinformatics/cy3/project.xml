@@ -1,0 +1,665 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MarrsProject title="Public Sparql Endpoints" schemaversion="0.2" pubversion="@PUBLISHVERSION@">
+	<Query title="Search for a protein by preferred name" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct ?src ?species ?label ("protein" AS ?type) ("Uniprot" AS ?provenance)
+WHERE
+{
+	SERVICE <http://beta.sparql.uniprot.org/sparql> {
+		SELECT *
+        	WHERE 
+        	{ 
+			?src a up:Protein . 
+			?src up:encodedBy ?node1 .
+			?node1 skos:prefLabel ?label . 
+			?src up:organism ?taxonId .
+			FILTER (?label IN ("${PROTNAME}")) .
+			?src up:reviewed 1 .
+			GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+				?taxonId up:scientificName ?species .
+				FILTER (?species IN ("Homo sapiens", "Mus musculus")) .
+			}
+		}
+	} 
+}
+]]><AskBefore key="PROTNAME"/></Query>
+	<Query title="Search for a protein by Uniprot ID" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct ?src ?label ?species ("protein" AS ?type) ("uniprot" AS ?provenance)	
+WHERE 
+{
+    SERVICE <http://beta.sparql.uniprot.org/sparql> {
+	?src a up:Protein . 
+	?src up:encodedBy ?node1 .
+	?node1 skos:prefLabel ?label .
+	?src up:organism ?taxonId .
+	FILTER (?src IN (<http://purl.uniprot.org/uniprot/${UNIPROTID}>)) .
+	GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+		?taxonId up:scientificName ?species .
+		FILTER (?species IN ("Homo sapiens", "Mus musculus")) .
+       	}
+    }
+}
+
+]]><AskBefore key="UNIPROTID"/></Query>
+	<Query title="Search for a human gene by HGNC Symbol" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct ?src ?label ?hgnc ("gene" AS ?type) ("Homo sapiens" AS ?species) ("Uniprot" AS ?provenance)	
+WHERE 
+{ 
+    SERVICE <http://beta.sparql.uniprot.org/sparql> {
+  	?protein rdfs:seeAlso ?hgnc .
+  	?protein rdfs:seeAlso ?src .
+  	?src up:database <http://purl.uniprot.org/database/GeneID> .
+	?hgnc rdfs:comment ?label .
+  	FILTER (?label IN ("${GENENAME}")) .
+	?hgnc up:database <http://purl.uniprot.org/database/HGNC> .
+    }
+}
+]]><AskBefore key="GENENAME"/></Query>
+	<Query title="Search for a gene by entrez gene id" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct ?src ?label ("gene" AS ?type) ?species ("Uniprot" AS ?provenance)	
+WHERE 
+{ 
+    SERVICE <http://beta.sparql.uniprot.org/sparql> {
+	  	?protein rdfs:seeAlso ?src .
+	  	?src up:database <http://purl.uniprot.org/database/GeneID> .
+	  	?protein up:encodedBy ?node1 .
+		?node1 skos:prefLabel ?label .	
+		?protein up:organism ?taxonId .
+		FILTER (?src IN (<http://purl.uniprot.org/geneid/${GENEID}>)) .
+	    GRAPH  <http://beta.sparql.uniprot.org/taxonomy/> {
+	        ?taxonId up:scientificName ?species . 
+		FILTER (?species IN ("Homo sapiens", "Mus musculus")) .
+	    }
+    }
+}
+]]><AskBefore key="GENEID"/></Query>
+<Query title="Search Uniprot for a disease by keyword" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct ?src ?label ("disease" AS ?type) ("uniprot" AS ?provenance) 
+WHERE 
+{
+    SERVICE <http://beta.sparql.uniprot.org/sparql> {
+        SELECT DISTINCT * 
+        WHERE {
+		  	?diseaseAnnots <http://purl.uniprot.org/core/disease> ?diseaseNo .
+		  	?diseaseNo skos:prefLabel ?label .
+		  	FILTER (regex(?label, "${DISEASENAME}", "i")) .
+			?diseaseNo rdfs:seeAlso ?src .
+			?src up:database <http://purl.uniprot.org/database/MIM> .
+        }
+    }
+}
+]]><AskBefore key="DISEASENAME"/></Query> 
+	<Query title="Search for a GO identifier" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX fn: <http://www.w3.org/2005/xpath-functions#>
+SELECT distinct ?src  ?label ("GO" AS ?type)
+WHERE 
+{
+    SERVICE <http://beta.sparql.uniprot.org/> {
+        GRAPH <http://beta.sparql.uniprot.org/go/> {
+		?src <http://www.w3.org/2004/02/skos/core#prefLabel> ?label .
+		?src <http://www.w3.org/2004/02/skos/core#exactMatch> ?match .
+		FILTER (?match IN (<http://www.geneontology.org/go#${GOID}>)) .       
+	}    
+    }  
+}
+]]><AskBefore key="GOID"/></Query>
+	<Query title="Search for a GO term" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+SELECT distinct ?src ?label ("GO" AS ?type)
+WHERE
+{
+    SERVICE <http://beta.sparql.uniprot.org/> {
+        GRAPH <http://beta.sparql.uniprot.org/go/> {
+			?src <http://www.w3.org/2004/02/skos/core#prefLabel> ?label.
+		  	?src <http://www.w3.org/2004/02/skos/core#exactMatch> ?match .
+			FILTER (regex(?label, "${GOTERM}", "i")) .
+        }
+    }
+}
+]]><AskBefore key="GOTERM"/></Query>
+	<Query title="Search for a pathway by name" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
+SELECT DISTINCT ?src ?label ("pathway" as ?type) ?species ("reactome" as ?provenance)	
+WHERE 
+{
+    SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
+		?src rdf:type biopax3:Pathway .
+		?src biopax3:displayName ?label .
+	  	FILTER (regex(?label, ("${PWYNAME|literal}"), "i")) .
+	  	?src biopax3:organism ?taxonId .
+        ?taxonId biopax3:name ?species .
+	FILTER  (?species IN ("Homo sapiens", "Mus musculus")) .
+    }
+}
+]]><AskBefore key="PWYNAME"/></Query>
+	<Query title="find genes for a protein" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct  ?src ?dest ("gene" AS ?dest_type) ?dest_species ?dest_label ("Uniprot" AS ?provenance) ("has-gene" AS ?interaction)
+WHERE
+{
+    SERVICE <http://beta.sparql.uniprot.org/> {
+		SELECT *
+        	WHERE 
+        	{  
+			?src up:encodedBy ?node1 .
+			?node1 skos:prefLabel ?dest_label . 
+            ?src up:organism ?taxonId .
+			FILTER (?src IN (${ID|uri-list})) .
+			GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+				?taxonId up:scientificName ?dest_species .
+			}
+            ?src rdfs:seeAlso ?dest .
+            ?dest up:database <http://purl.uniprot.org/database/GeneID> .
+		}
+	}
+}
+]]><Context key="type" value="protein"/></Query>
+	<Query title="find proteins for a gene" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct  ?src ?dest ("protein" AS ?dest_type) ?dest_species ?dest_label ("Uniprot" AS ?provenance) ("has-gene" AS ?interaction)
+WHERE
+{
+    SERVICE <http://beta.sparql.uniprot.org/> {
+		SELECT *
+        	WHERE 
+        	{  
+            		?dest rdfs:seeAlso ?src .
+            		?src up:database <http://purl.uniprot.org/database/GeneID> .
+           		 FILTER (?src IN (${ID|uri-list})) .
+            		?dest up:encodedBy ?node1 .
+			?node1 skos:prefLabel ?dest_label . 
+            		?dest up:organism ?taxonId .
+			?dest up:reviewed 1 .
+			GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+				?taxonId up:scientificName ?dest_species .
+			}
+		}
+	}
+}
+]]><Context key="type" value="gene"/></Query>
+	<Query title="Find reactome pathways containing this protein" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
+SELECT DISTINCT ?src ?dest ?dest_label ("pathway" AS ?dest_type) ?dest_species ("target-to-pathway" AS ?interaction) ("reactome" AS ?provenance)	
+WHERE 
+{
+    SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
+		?dest a biopax3:Pathway .  
+		?dest biopax3:displayName ?dest_label .
+		?dest biopax3:pathwayComponent ?reaction . 
+		?reaction a biopax3:BiochemicalReaction . 
+		{          
+			{?reaction ?rel ?protein .}   
+		UNION  
+		{  
+			?reaction  ?rel  ?complex . 
+			?complex a biopax3:Complex .  
+			?complex ?comp ?protein . 
+		}} 
+		?protein a biopax3:Protein . 
+		?protein biopax3:entityReference ?src .
+		FILTER (?src IN (${ID|uri-list})) . 
+		?dest biopax3:organism ?taxonId .
+		?taxonId biopax3:name ?dest_species .
+	}
+}      
+]]><Context key="type" value="protein"/></Query>
+	<Query title="Find proteins contained in this reactome pathway" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
+SELECT DISTINCT ?src ?dest ?dest_label ("protein" AS ?dest_type) ?dest_species ("target-to-pathway" AS ?interaction) ("reactome" AS ?provenance)	
+WHERE 
+{
+    SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
+		?src a biopax3:Pathway .  
+		?src biopax3:pathwayComponent ?reaction . 
+		?reaction a biopax3:BiochemicalReaction . 
+		{          
+			{?reaction ?rel ?protein .}   
+		UNION  
+		{  
+			?reaction  ?rel  ?complex . 
+			?complex a biopax3:Complex .  
+			?complex ?comp ?protein . 
+		}} 
+		?protein a biopax3:Protein . 
+		?protein biopax3:entityReference ?dest .
+		FILTER (?src IN (${ID|uri-list})) .
+   
+    }
+    SERVICE <http://beta.sparql.uniprot.org/sparql> {
+		?dest a up:Protein . 
+		?dest up:encodedBy ?node1 .
+		?node1 skos:prefLabel ?dest_label .
+		?dest up:organism ?taxonId .
+	    GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+            ?taxonId up:scientificName ?dest_species . 
+        }
+    }
+}
+]]><Context key="type" value="pathway"/></Query>
+	<Query title="Find metabolites contained in this reactome pathway" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT DISTINCT ?src ?dest ?dest_label ("metabolite" AS ?dest_type) ("metabolite-to-pathway" AS ?interaction) ("reactome" AS ?provenance) 
+WHERE 
+{
+    SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
+
+		FILTER (?src IN (${ID|uri-list})) .
+		?src a biopax3:Pathway .  
+		?src biopax3:pathwayComponent ?reaction . 
+		?reaction a biopax3:BiochemicalReaction . 
+		?reaction ?pred ?sm .
+	  	FILTER (?pred IN (<http://www.biopax.org/release/biopax-level3.owl#left>, <http://www.biopax.org/release/biopax-level3.owl#right>)) .
+	  	?sm biopax3:displayName ?dest_label .
+	    
+		?sm biopax3:entityReference ?dest .
+	  	?dest biopax3:xref [ biopax3:db "ChEBI"^^xsd:string ] .
+    }
+}    
+]]><Context key="type" value="pathway"/></Query>
+	<Query title="Find super-pathways" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
+
+SELECT DISTINCT ?src ?src_label ?dest ?dest_label ?dest_species ("pathway" AS ?dest_type) ("reactome" as ?provenance) ("subpathway" as ?interaction)
+WHERE 
+{
+    SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
+		?src rdf:type biopax3:Pathway .
+		?dest rdf:type biopax3:Pathway .
+	  	?dest biopax3:pathwayComponent ?src .
+		?src biopax3:displayName ?src_label .
+	  	?dest biopax3:displayName ?dest_label .
+	  	FILTER (?src IN (${ID|uri-list})) .
+        ?dest biopax3:organism ?taxonId .
+        ?taxonId biopax3:name ?dest_species .
+    }
+}
+]]><Context key="type" value="pathway"/></Query>
+	<Query title="Find sub-pathways" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
+SELECT DISTINCT ?src ?src_label ?dest ?dest_label ?dest_species ("pathway" AS ?dest_type) ("reactome" as ?provenance) ("subpathway" as ?interaction)
+WHERE 
+{
+    SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
+		?src rdf:type biopax3:Pathway .
+		?dest rdf:type biopax3:Pathway .
+	  	?src biopax3:pathwayComponent ?dest .
+		?src biopax3:displayName ?src_label .
+	  	?dest biopax3:displayName ?dest_label .
+	  	FILTER (?src IN (${ID|uri-list})) .
+        ?dest biopax3:organism ?taxonId .
+        ?taxonId biopax3:name ?dest_species .
+    }
+}
+]]><Context key="type" value="pathway"/></Query>
+    <Query title="Find biochemical reactions of this protein" type="QUERY_NODE_CONTEXT"><![CDATA[  
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
+SELECT DISTINCT ?src ?dest ?dest_label (?rel AS ?interaction) ("biochemical reaction" AS ?dest_type) ("uniprot" AS ?provenance)
+WHERE 
+{
+	SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
+		?dest a biopax3:BiochemicalReaction . 
+		{          
+			{?dest ?rel ?protein .}   
+		UNION  
+		{  
+			?dest ?rel  ?complex . 
+			?complex a biopax3:Complex .  
+			?complex ?comp ?protein . 
+		}} 
+		?protein a biopax3:Protein . 
+		?protein biopax3:entityReference ?src .
+  		FILTER (?src IN (${ID|uri-list})) .
+  		?dest biopax3:displayName ?dest_label .
+	}
+}
+]]><Context key="type" value="protein"/></Query>
+    <Query title="Find proteins within a biochemical reaction" type="QUERY_NODE_CONTEXT"><![CDATA[  
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
+SELECT DISTINCT ?src ?dest ?dest_label (?rel AS ?interaction) ("protein" AS ?dest_type) ?dest_species ("uniprot" AS ?provenance)
+WHERE 
+{
+	SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
+		?src a biopax3:BiochemicalReaction . 
+		{          
+			{?src ?rel ?protein .}   
+		UNION  
+		{  
+			?src ?rel  ?complex . 
+			?complex a biopax3:Complex .  
+			?complex ?comp ?protein . 
+		}} 
+		?protein a biopax3:Protein . 
+		?protein biopax3:entityReference ?dest .
+  		FILTER (?src IN (${ID|uri-list})) .
+	}
+	SERVICE <http://beta.sparql.uniprot.org/sparql> {
+		?dest a up:Protein . 
+		?dest up:encodedBy ?node1 .
+		?node1 skos:prefLabel ?dest_label .
+		?dest up:organism ?taxonId .
+		GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+		    ?taxonId up:scientificName ?dest_species . 
+		}
+	}
+}
+]]><Context key="type" value="biochemical reaction"/></Query>
+    <Query title="Find chembl compounds linked to this protein" type="QUERY_NODE_CONTEXT"><![CDATA[  
+PREFIX bp: <http://www.biopax.org/release/biopax-level3.owl#>
+PREFIX cco: <http://rdf.ebi.ac.uk/terms/chembl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT  distinct ?src ?dest ?dest_label ("chembl" AS ?provenance) (?standType AS ?interaction) ("compound" as ?dest_type) ?column ?standRelation ?standValue ?standUnits	 
+WHERE 
+{ 
+    SERVICE <https://www.ebi.ac.uk/rdf/services/chembl/sparql> {
+		?targetComp cco:targetCmptXref ?src .
+	  	FILTER (?src IN (${ID|uri-list})) .
+		?target cco:hasTargetComponent ?targetComp .
+	  	?target cco:hasAssay ?assay .
+	  	?assay cco:hasActivity ?act . 
+	  	?act cco:standardRelation ?standRelation ;
+			cco:standardValue ?standValue ;
+			cco:standardUnits ?standUnits ;
+			cco:standardType ?standType ;
+			cco:hasMolecule ?dest ;
+	  		rdfs:label ?act_label .
+		OPTIONAL {?dest skos:prefLabel ?dest_label }.
+	}
+} 
+]]><Context key="type" value="protein"/></Query>
+	<Query title="Find proteins that are linked this compound in chembl" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX bp: <http://www.biopax.org/release/biopax-level3.owl#>
+PREFIX cco: <http://rdf.ebi.ac.uk/terms/chembl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX up: <http://purl.uniprot.org/core/> 
+SELECT  distinct ?src ?dest ("chembl" AS ?provenance) ("protein" as ?dest_type) ?standRelation ?standValue ?standUnits	?dest_species ?dest_label (?standType AS ?interaction)
+WHERE 
+{ 
+    SERVICE <https://www.ebi.ac.uk/rdf/services/chembl/sparql> {
+		?targetComp cco:targetCmptXref ?dest .
+	  	?dest a cco:UniprotRef .
+	  	FILTER (?src IN (${ID|uri-list})) .
+		?target cco:hasTargetComponent ?targetComp .
+	  	?target cco:hasAssay ?assay .
+	  	?assay cco:hasActivity ?act . 
+	  	?act cco:standardRelation ?standRelation ;
+			cco:standardValue ?standValue ;
+			cco:standardUnits ?standUnits ;
+			cco:standardType ?standType ;
+			cco:hasMolecule ?src ;
+	  		rdfs:label ?act_label .
+		OPTIONAL {?src skos:prefLabel ?src_label }.
+	}
+    SERVICE <http://beta.sparql.uniprot.org/sparql> {
+	       ?dest a up:Protein . 
+	       ?dest up:encodedBy ?node1 .
+	       ?node1 skos:prefLabel ?dest_label .
+	       ?dest up:organism ?taxonId .
+           GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+                ?taxonId up:scientificName ?dest_species . 
+		FILTER (?dest_species IN  ("Homo sapiens", "Mus musculus")) .
+           }
+    }
+}
+]]><Context key="type" value="compound"/></Query>
+<!--	<Query title="find orthologs for gene through ensembl" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+PREFIX sio: <http://semanticscience.org/resource/>
+PREFIX faldo: <http://biohackathon.org/resource/faldo#>
+PREFIX ensembl: <http://rdf.ebi.ac.uk/resource/ensembl/>
+PREFIX ensembltranscript: <http://rdf.ebi.ac.uk/resource/ensembl.transcript/>
+PREFIX ensemblexon: <http://rdf.ebi.ac.uk/resource/ensembl.exon/>
+PREFIX ensemblprotein: <http://rdf.ebi.ac.uk/resource/ensembl.protein/>
+PREFIX ensemblterms: <http://rdf.ebi.ac.uk/terms/ensembl/>
+
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+SELECT DISTINCT ?gene ?ortholog ?orthologSpecies ?dest {	# http://wwwdev.ebi.ac.uk/rdf/services/ensembl/sparql
+	?g <http://rdfs.org/ns/void#subset> <http://rdf.ebi.ac.uk/dataset/ensembl/77> . 
+	?g dcterms:title ?title . 
+    	FILTER (regex(?title, "${src_species}", "i")) ## need to accommodate this
+ 	GRAPH ?g { # need to place the species specific graph here
+  		?gene ?xrefRelationType ?src .
+		FILTER (?src IN (${ID|uri-list}))
+  		?src a <http://identifiers.org/ncbigene> .
+		?xrefRelationType rdfs:subPropertyOf skos:related .
+ 	}
+	?gene sio:SIO_000558 ?ortholog .
+   	?gene obo:RO_0002162 [rdfs:label ?species] .
+   	?gene rdfs:label ?geneLabel .
+   	?ortholog rdfs:label ?orthologLabel .
+   	?ortholog obo:RO_0002162 [rdfs:label ?orthologSpecies] .
+   	FILTER (?species != ?orthologSpecies) 
+	?g2 <http://rdfs.org/ns/void#subset> <http://rdf.ebi.ac.uk/dataset/ensembl/77> . 
+	?g2 dcterms:title ?title2 . 
+    	FILTER (regex(?title2, ?orthologSpecies, "i"))
+	GRAPH ?g2 { # TODO this does not work, will only go to one graph in list
+  		?ortholog ?xrefRelationType ?dest .
+  		?dest a <http://identifiers.org/ncbigene> .
+		?xrefRelationType rdfs:subPropertyOf skos:related .
+ 	}
+}
+
+]]><TODO this is currently a development endpoint that is not reliable: check back later here to see if promoted to production <Context key="type" value="gene"/></Query>-->
+	<Query title="find GO terms for protein" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+SELECT distinct ?src ?dest ?dest_label ("GO" AS ?dest_type) ("Uniprot" AS ?provenance) ("GO annotation" AS ?interaction)
+WHERE
+{
+    SERVICE <http://beta.sparql.uniprot.org/> {
+		?dest <http://www.w3.org/2004/02/skos/core#prefLabel> ?dest_label .
+		?dest <http://purl.uniprot.org/core/database> <http://purl.uniprot.org/database/go> .
+		FILTER (?src IN (${ID|uri-list})) . 
+		?src <http://purl.uniprot.org/core/classifiedWith> ?dest .
+    } 	
+}
+]]><Context key="type" value="protein"/></Query>
+	<Query title="find proteins for GO term" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct ?src ?dest ?dest_label ?dest_species ("protein" AS ?dest_type) ("Uniprot" AS ?provenance) ("GO annotation" AS ?interaction)
+WHERE
+{
+    SERVICE <http://beta.sparql.uniprot.org/> {
+		?src <http://purl.uniprot.org/core/database> <http://purl.uniprot.org/database/go> .
+		FILTER (?src IN (${ID|uri-list})) . 
+		?dest <http://purl.uniprot.org/core/classifiedWith> ?src .
+        	?dest up:encodedBy ?node1 .
+			?node1 skos:prefLabel ?dest_label . 
+			?dest up:organism ?taxonId .
+			?dest up:reviewed 1 .
+			GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+				?taxonId up:scientificName ?dest_species .
+				FILTER (?dest_species IN ("Homo sapiens", "Mus musculus")) .
+			}
+    } 	
+}
+]]><Context key="type" value="GO"/></Query>
+	<Query title="find parent GO terms" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up: <http://purl.uniprot.org/core/> 
+SELECT distinct ?src ?dest ?dest_label ("GO" AS ?dest_type) ("has-parent" AS ?interaction)
+WHERE
+{
+    SERVICE <http://beta.sparql.uniprot.org/> {
+        GRAPH <http://beta.sparql.uniprot.org/go/> {
+			?src <http://www.w3.org/2004/02/skos/core#prefLabel> ?label.
+			FILTER (?src IN (${ID|uri-list})) .
+          	?src <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?dest .
+          	?dest <http://www.w3.org/2004/02/skos/core#prefLabel> ?dest_label.
+        }
+    }
+}
+]]><Context key="type" value="GO"/></Query>
+	<Query title="find child GO terms" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up: <http://purl.uniprot.org/core/> 
+SELECT distinct ?src ?dest ?dest_label ("GO" AS ?dest_type) ("has-parent" AS ?interaction)
+WHERE
+{
+    SERVICE <http://beta.sparql.uniprot.org/> {
+        GRAPH <http://beta.sparql.uniprot.org/go/> {
+			?src <http://www.w3.org/2004/02/skos/core#prefLabel> ?label.
+			FILTER (?src IN (${ID|uri-list})) .
+          	?src <http://www.w3.org/2004/02/skos/core#narrower> ?dest .
+          	?dest <http://www.w3.org/2004/02/skos/core#prefLabel> ?dest_label.
+        }
+    }
+}
+]]><Context key="type" value="GO"/></Query>
+	<Query title="All disease annotations" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct ?src ?dest ("disease" AS ?dest_type) ?dest_species ?dest_label ("Uniprot" AS ?provenance) ("gene-disease-association" AS ?interaction)
+WHERE
+{
+    	SERVICE <http://beta.sparql.uniprot.org/> {
+		SELECT *
+		WHERE 
+		{  
+		    	FILTER (?src IN (${ID|uri-list})) .
+		    	?src up:organism ?taxonId .
+			?src <http://purl.uniprot.org/core/annotation> ?annot .
+			?annot a <http://purl.uniprot.org/core/Disease_Annotation> .
+		      	?annot <http://purl.uniprot.org/core/disease> ?disease .
+		      	?disease <http://www.w3.org/2004/02/skos/core#prefLabel> ?dest_label .
+			?disease rdfs:seeAlso ?dest .
+			?dest <http://purl.uniprot.org/core/database> <http://purl.uniprot.org/database/MIM> .
+
+			GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+				?taxonId up:scientificName ?dest_species .
+			}
+		}
+	}
+}
+]]><Context key="type" value="protein"/></Query>
+	<Query title="All protein associations for a disease" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct ?src ?dest ("protein" AS ?dest_type) ?dest_species ?dest_label ("Uniprot" AS ?provenance) ("gene-disease-association" AS ?interaction)
+WHERE
+{
+    	SERVICE <http://beta.sparql.uniprot.org/> {
+		SELECT *
+		WHERE 
+		{  
+		 	FILTER (?src IN (${ID|uri-list})) .
+		    	?dest up:organism ?taxonId .
+			?dest <http://purl.uniprot.org/core/annotation> ?annot .
+          		?dest up:encodedBy ?node1 .
+			?node1 skos:prefLabel ?dest_label .
+			?annot a <http://purl.uniprot.org/core/Disease_Annotation> .
+		      	?annot <http://purl.uniprot.org/core/disease> ?disease .
+                	?disease rdfs:seeAlso ?src .
+			?src <http://purl.uniprot.org/core/database> <http://purl.uniprot.org/database/MIM> .
+
+			GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+				?taxonId up:scientificName ?dest_species .
+				FILTER (?dest_species IN ("Homo sapiens", "Mus musculus")) .
+			}
+		}
+	}
+}
+]]><Context key="type" value="disease"/></Query>
+	<Query title="find tissues in from which the protein is isolated" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+SELECT distinct ?src ?dest ("tissue" AS ?dest_type) ?dest_species ?dest_label ("Uniprot" AS ?provenance) ("isolated-from" AS ?interaction)
+WHERE
+{
+    	SERVICE <http://beta.sparql.uniprot.org/> {
+		SELECT *
+		WHERE 
+		{  
+		 	FILTER (?src IN (${ID|uri-list})) .
+		    	?src up:organism ?taxonId .
+			?src <http://purl.uniprot.org/core/isolatedFrom> ?dest .
+			?dest skos:prefLabel ?dest_label .
+			GRAPH <http://beta.sparql.uniprot.org/taxonomy/> {
+				?taxonId up:scientificName ?dest_species .
+			}
+		}
+	}
+}
+]]><Context key="type" value="protein"/></Query>
+	<Param key="PROTNAME" val="PSMB1" />
+	<Param key="UNIPROTID" val="P60174" />
+	<Param key="DISEASENAME" val="Lung" />
+	<Param key="GENENAME" val="TP53" />
+	<Param key="GENEID" val="3643" />
+	<Param key="ID" val="http://purl.uniprot.org/uniprot/P42336" />
+	<Param key="PWYNAME" val="Signaling by BMP" />
+	<Param key="GOID" val="GO:0000001" />
+	<Param key="GOTERM" val="glycolysis" />
+	<Param key="PUBURI" val="http://identifiers.org/pubmed/16859172" />
+	<Param key="CONFIDENCE" val="20" />
+
+</MarrsProject>
+
