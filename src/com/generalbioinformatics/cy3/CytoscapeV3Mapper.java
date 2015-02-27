@@ -10,6 +10,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import nl.helixsoft.recordstream.Record;
+import nl.helixsoft.recordstream.RecordStream;
+import nl.helixsoft.recordstream.StreamException;
+
 import org.cytoscape.app.CyAppAdapter;
 import org.cytoscape.app.swing.CySwingAppAdapter;
 import org.cytoscape.event.CyEventHelper;
@@ -20,22 +24,27 @@ import org.cytoscape.model.CyTable;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
+import org.cytoscape.view.presentation.property.values.NodeShape;
+import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualStyle;
+import org.cytoscape.view.vizmap.VisualStyleFactory;
+import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 
-import nl.helixsoft.recordstream.Record;
-import nl.helixsoft.recordstream.RecordStream;
-import nl.helixsoft.recordstream.StreamException;
-
-import com.generalbioinformatics.marrs.plus.MarrsMapper;
+import com.generalbioinformatics.marrs.plus.AbstractMarrsMapper;
 import com.generalbioinformatics.marrs.plus.MarrsProject;
 import com.generalbioinformatics.marrs.plus.MarrsQuery;
 import com.generalbioinformatics.marrs.plus.TripleStoreManager;
 
-public class CytoscapeV3Mapper implements MarrsMapper
+public class CytoscapeV3Mapper extends AbstractMarrsMapper
 {
 	private final CyAppAdapter adapter;
 
 	private CyNetwork myNet;
 	private CyNetworkView myView;
+	private VisualStyle _vs;
 	
 	private Map<String, CyNode> idMap = new HashMap<String, CyNode>();
 
@@ -54,12 +63,11 @@ public class CytoscapeV3Mapper implements MarrsMapper
 		}
 	}
 
-	private final TripleStoreManager conMgr;
 	private final CyNetworkNaming cyNetworkNaming;
 	
 	public CytoscapeV3Mapper(CySwingAppAdapter adapter, TripleStoreManager conMgr, CyNetworkNaming cyNetworkNaming) 
 	{
-		this.conMgr = conMgr;
+		super (conMgr);
 		this.adapter = adapter;
 		this.cyNetworkNaming = cyNetworkNaming;
 	}
@@ -128,6 +136,43 @@ public class CytoscapeV3Mapper implements MarrsMapper
 		return myNet;
 	}
 
+	private VisualStyle createOrGetVisualStyle()
+	{
+		if (_vs == null)
+		{
+			// To get references to services in CyActivator class
+			VisualMappingManager vmmServiceRef = adapter.getVisualMappingManager();
+
+			VisualStyleFactory visualStyleFactory = adapter.getVisualStyleFactory();
+
+			VisualMappingFunctionFactory vmfFactoryC = adapter.getVisualMappingFunctionContinuousFactory();
+			VisualMappingFunctionFactory vmfFactoryD = adapter.getVisualMappingFunctionDiscreteFactory();
+			VisualMappingFunctionFactory vmfFactoryP = adapter.getVisualMappingFunctionPassthroughFactory();
+
+
+			// To create a new VisualStyle object and set the mapping function
+			_vs = visualStyleFactory.createVisualStyle("General SPARQL visual style");
+
+			//Use pass-through mapping
+//			String ctrAttrName1 = "SUID";
+//			PassthroughMapping pMapping = (PassthroughMapping) vmfFactoryP.createVisualMappingFunction(ctrAttrName1, 
+//					String.class, "", BasicVisualLexicon.NODE_LABEL);
+
+			DiscreteMapping<String, NodeShape> typeMapping = (DiscreteMapping<String, NodeShape>)
+					vmfFactoryD.createVisualMappingFunction("type", String.class, BasicVisualLexicon.NODE_SHAPE);
+			
+			typeMapping.putMapValue("protein", NodeShapeVisualProperty.ROUND_RECTANGLE);
+			typeMapping.putMapValue("gene", NodeShapeVisualProperty.DIAMOND);
+			typeMapping.putMapValue("reaction", NodeShapeVisualProperty.RECTANGLE);
+			
+			_vs.addVisualMappingFunction(typeMapping);
+
+			// Add the new style to the VisualMappingManager
+			vmmServiceRef.addVisualStyle(_vs);
+		}
+		return _vs;
+	}
+	
 	@Override
 	public int addAttributes(String q) throws StreamException 
 	{
@@ -162,7 +207,9 @@ public class CytoscapeV3Mapper implements MarrsMapper
 		CyEventHelper eventHelper = adapter.getCyEventHelper();
 		eventHelper.flushPayloadEvents(); // will cause node views to be created...
 		
-		adapter.getVisualMappingManager().getVisualStyle(myView).apply(myView);
+		VisualStyle vs = createOrGetVisualStyle();
+		vs.apply(myView);
+		
 		myView.updateView();	
 	}
 	
@@ -182,14 +229,7 @@ public class CytoscapeV3Mapper implements MarrsMapper
 	@Override
 	public int popupResults(String q) throws StreamException 
 	{
-		RecordStream rs = conMgr.getConnection().sparqlSelect(q);
-		int count = 0;
-		for (Record r : rs)
-		{
-			count++;
-			//TODO .. show table with results...
-		}
-		return count;
+		return popupResultsHelper(q, null); // TODO get reference to Desktop
 	}
 
 	@Override

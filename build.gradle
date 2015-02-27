@@ -1,11 +1,17 @@
+import java.util.jar.JarEntry;
+
 apply plugin: 'java'
 
 def localRepo = 'file://' + new File(System.getProperty('user.home'), 'prg/bundle-repository').absolutePath
 
 repositories {
-	maven {
+
+	// NOTE: invoke gradle with --offline option to use cache.
+	
+    maven {
         url "http://code.cytoscape.org/nexus/content/repositories/releases/"
     }
+
     ivy {
     	url localRepo
     	layout "pattern", {
@@ -67,5 +73,16 @@ jar {
     manifest {
         from 'META-INF/FELIX-MANIFEST.MF'
     }
-    
+	
+}
+
+// copy the jar removing version info, 
+// for the benefit of symlinking to the cytoscape installed apps dir.
+task copyJar (type: Copy, dependsOn:jar) {
+	from "build/libs"
+	into "."
+	include "${project.name}-${version}.jar"
+	rename { String fileName ->
+		fileName.replace("$version", "LATEST")
+	  }
 }
