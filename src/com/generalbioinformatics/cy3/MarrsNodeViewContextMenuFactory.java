@@ -5,33 +5,26 @@
 package com.generalbioinformatics.cy3;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Map;
-import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
 import nl.helixsoft.recordstream.StreamException;
-import nl.helixsoft.util.StringUtils;
 
 import org.cytoscape.application.swing.CyMenuItem;
 import org.cytoscape.application.swing.CyNodeViewContextMenuFactory;
-import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
-import org.cytoscape.model.CyTableManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
-import org.osgi.framework.BundleContext;
 
-import com.generalbioinformatics.marrs.plus.MarrsException;
-import com.generalbioinformatics.marrs.plus.MarrsProject;
-import com.generalbioinformatics.marrs.plus.MarrsQuery;
-import com.generalbioinformatics.marrs.plus.ProjectManager;
+import com.generalbioinformatics.rdf.gui.MarrsException;
+import com.generalbioinformatics.rdf.gui.MarrsProject;
+import com.generalbioinformatics.rdf.gui.MarrsQuery;
+import com.generalbioinformatics.rdf.gui.ProjectManager;
 
 public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFactory //, ActionListener
 {

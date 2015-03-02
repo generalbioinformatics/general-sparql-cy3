@@ -36,10 +36,10 @@ import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 
-import com.generalbioinformatics.marrs.plus.AbstractMarrsMapper;
-import com.generalbioinformatics.marrs.plus.MarrsProject;
-import com.generalbioinformatics.marrs.plus.MarrsQuery;
-import com.generalbioinformatics.marrs.plus.TripleStoreManager;
+import com.generalbioinformatics.rdf.gui.AbstractMarrsMapper;
+import com.generalbioinformatics.rdf.gui.MarrsProject;
+import com.generalbioinformatics.rdf.gui.MarrsQuery;
+import com.generalbioinformatics.rdf.gui.TripleStoreManager;
 
 public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 {
@@ -106,21 +106,26 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 			
 			createNodeAttributeIfNotExists("id");			
 			adapter.getCyNetworkManager().addNetwork(myNet);
+			
+			myView = null;
 		}
 		
 		// create a network view if necessary (regardless of whether the network was just created
-		
-		CyNetworkViewManager cyNetworkViewManager = adapter.getCyNetworkViewManager(); 
-		final Collection<CyNetworkView> views = cyNetworkViewManager.getNetworkViews(myNet);
-		
-		myView = null; //TODO : resetting here, not sure if this is a good idea, but we have to deal with the possibility of a deleted view. 
-		if(views.size() != 0) myView = views.iterator().next();
-		
 		if (myView == null) 
 		{
-			// create a new view for my network
-			myView = adapter.getCyNetworkViewFactory().createNetworkView(myNet);
-			cyNetworkViewManager.addNetworkView(myView);		
+			CyNetworkViewManager cyNetworkViewManager = adapter.getCyNetworkViewManager(); 
+			final Collection<CyNetworkView> views = cyNetworkViewManager.getNetworkViews(myNet);
+			
+			if(views.size() != 0) 
+			{
+				myView = views.iterator().next();
+			}
+			else
+			{
+				// create a new view for my network
+				myView = adapter.getCyNetworkViewFactory().createNetworkView(myNet);
+				cyNetworkViewManager.addNetworkView(myView);
+			}
 		}
 		return myNet;
 	}
@@ -162,6 +167,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		return _vs;
 	}
 	
+	/*
 	@Override
 	public int addAttributes(String q) throws StreamException 
 	{
@@ -191,7 +197,8 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		
 		return count;
 	}
-
+	 */
+	
 	@Override
 	protected void flushView()
 	{
@@ -228,6 +235,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		// TODO Auto-generated method stub
 	}
 
+	/*
 	@Override
 	public int createNetwork(String q, MarrsQuery mq)
 			throws StreamException 
@@ -270,7 +278,8 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		
 		return count;
 	}
-
+	 */
+	
 	@Override
 	protected void setEdgeAttribute(CyEdge edge, String colName, Object value) 
 	{
@@ -304,14 +313,16 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	}
 
 	@Override
-	protected void copyNodeCoordinates() {
-		// TODO Auto-generated method stub
-		
+	protected void copyNodeCoordinates() 
+	{
+		// TODO Auto-generated method stub		
 	}
 
 	@Override
 	protected CyNode createNodeIfNotExists(String key, Set<CyNode> nodesAdded) 
 	{
+		createOrGetNetwork();
+		
 		/** returns the node for a given key, or creates a new one if it doesn't exist. */
 		if (idMap.containsKey(key))
 		{
@@ -321,6 +332,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		{
 			CyNode node = myNet.addNode();
 			idMap.put (key, node);
+			setNodeAttribute(node, "id", key);
 			nodesAdded.add (node);
 			return node;
 		}
@@ -329,6 +341,8 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	@Override
 	protected CyEdge createEdgeIfNotExists(CyNode nodeSrc, CyNode nodeDest, String interaction, Set<CyEdge> edgesPostponed) 
 	{
+		createOrGetNetwork();
+		
 		CyTable table = myNet.getDefaultEdgeTable();
 		CyEdge edge = null;
 		

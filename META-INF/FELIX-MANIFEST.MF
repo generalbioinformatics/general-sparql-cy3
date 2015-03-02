@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: gb-Cy3
-Bundle-SymbolicName: gb-cy3-ivy
-Bundle-Version: 1.0.0.qualifier
+Bundle-Name: GeneralSPARQL-cy3
+Bundle-SymbolicName: com.generalbioinformatics.cy3
+Bundle-Version: 1.0.0.WIP
 Export-Package: com.generalbioinformatics.cy3
 Bundle-ClassPath: .,
  commons-codec-1.5.jar,
@@ -12,7 +12,7 @@ Bundle-ClassPath: .,
  jgoodies-forms-1.2.0.jar,
  jsyntaxpane-0.9.5.genbifo1.jar,
  com.generalbioinformatics.rdf-1.0.jar,
- com.generalbioinformatics.marrs.plus-1.0.jar,
+ com.generalbioinformatics.rdf.gui-1.0.jar,
  nl.helixsoft.gui-1.0.1.jar,
  nl.helixsoft.util-1.0.1.jar,
  com.springsource.org.jdom-1.1.0.jar

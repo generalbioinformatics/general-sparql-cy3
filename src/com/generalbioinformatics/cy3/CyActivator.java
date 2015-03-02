@@ -1,8 +1,6 @@
 /**
-*
 * Copyright (c) 2015 General Bioinformatics Limited
 * Distributed under the GNU GPL v2. For full terms see the file LICENSE.
-*
 */
 package com.generalbioinformatics.cy3;
 
@@ -35,10 +33,10 @@ import org.jdom.JDOMException;
 import org.osgi.framework.BundleContext;
 import org.xml.sax.InputSource;
 
-import com.generalbioinformatics.marrs.plus.MarrsPreference;
-import com.generalbioinformatics.marrs.plus.MarrsProject;
-import com.generalbioinformatics.marrs.plus.ProjectManager;
-import com.generalbioinformatics.marrs.plus.TripleStoreManager;
+import com.generalbioinformatics.rdf.gui.MarrsPreference;
+import com.generalbioinformatics.rdf.gui.MarrsProject;
+import com.generalbioinformatics.rdf.gui.ProjectManager;
+import com.generalbioinformatics.rdf.gui.TripleStoreManager;
 
 public class CyActivator extends AbstractCyActivator 
 {

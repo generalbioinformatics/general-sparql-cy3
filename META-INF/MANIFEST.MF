@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: gb-Cy3
+Bundle-Name: GeneralSPARQL-cy3
 Bundle-SymbolicName: com.generalbioinformatics.cy3
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.0.0.WIP
 Import-Package: org.cytoscape.app;version="[3.0,4)",
  org.cytoscape.app.swing;version="[3.0,4)",
  org.cytoscape.application;version="[3.0,4)",
@@ -19,7 +19,7 @@ Import-Package: org.cytoscape.app;version="[3.0,4)",
  org.cytoscape.view.presentation.property;version="[3.0,4)",
  org.cytoscape.view.presentation.property.values;version="[3.0,4)",
  org.osgi.framework;version="[1.4,2)"
-Require-Bundle: com.generalbioinformatics.marrs.plus;bundle-version="1.0.0",
+Require-Bundle: com.generalbioinformatics.rdf.gui;bundle-version="1.0.0",
  nl.helixsoft.util;bundle-version="1.0.0",
  nl.helixsoft.gui;bundle-version="1.0.0",
  com.springsource.org.jdom;bundle-version="1.1.0",
