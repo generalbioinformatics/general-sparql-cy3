@@ -8,11 +8,16 @@ package com.generalbioinformatics.cy3;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import javax.swing.JFrame;
 
 import nl.helixsoft.recordstream.Record;
 import nl.helixsoft.recordstream.RecordStream;
 import nl.helixsoft.recordstream.StreamException;
+import nl.helixsoft.util.ObjectUtils;
 
 import org.cytoscape.app.CyAppAdapter;
 import org.cytoscape.app.swing.CySwingAppAdapter;
@@ -38,7 +43,7 @@ import com.generalbioinformatics.marrs.plus.MarrsProject;
 import com.generalbioinformatics.marrs.plus.MarrsQuery;
 import com.generalbioinformatics.marrs.plus.TripleStoreManager;
 
-public class CytoscapeV3Mapper extends AbstractMarrsMapper
+public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 {
 	private final CyAppAdapter adapter;
 
@@ -47,21 +52,6 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper
 	private VisualStyle _vs;
 	
 	private Map<String, CyNode> idMap = new HashMap<String, CyNode>();
-
-	/** returns the node for a given key, or creates a new one if it doesn't exist. */
-	public CyNode createOrGet (String key)
-	{
-		if (idMap.containsKey(key))
-		{
-			return idMap.get(key);
-		}
-		else
-		{
-			CyNode node = myNet.addNode();
-			idMap.put (key, node);
-			return node;
-		}
-	}
 
 	private final CyNetworkNaming cyNetworkNaming;
 	
@@ -81,7 +71,8 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper
 		}
 	}
 
-	private void setNodeAttribute(CyNode node, String colName, Object value)
+	@Override
+	protected void setNodeAttribute(CyNode node, String colName, Object value)
 	{
 		CyTable table = myNet.getDefaultNodeTable();
 		if ("label".equals(colName))
@@ -180,13 +171,14 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper
 
 		CyNetwork myNet = createOrGetNetwork();
 		CyTable table = myNet.getDefaultNodeTable();
-
+		Set<CyNode> nodesAdded = new HashSet<CyNode>();
+		
 		int count = 0;
 		for (Record r : rs)
 		{
 			count++;
 			String src = "" + r.get("src");
-			CyNode nodeSrc = createOrGet(src);
+			CyNode nodeSrc = createNodeIfNotExists(src, nodesAdded);
 			table.getRow(nodeSrc.getSUID()).set("id", src);
 			
 			for (int i = 0; i < r.getMetaData().getNumCols(); ++i)
@@ -202,7 +194,8 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper
 		return count;
 	}
 
-	private void flushView()
+	@Override
+	protected void flushView()
 	{
 		CyEventHelper eventHelper = adapter.getCyEventHelper();
 		eventHelper.flushPayloadEvents(); // will cause node views to be created...
@@ -227,11 +220,11 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper
 	}
 
 	@Override
-	public int popupResults(String q) throws StreamException 
+	public JFrame getFrame()
 	{
-		return popupResultsHelper(q, null); // TODO get reference to Desktop
+		return null; //TODO - what is the root frame?
 	}
-
+	
 	@Override
 	public void setProject(MarrsProject arg0) {
 		// TODO Auto-generated method stub
@@ -246,45 +239,33 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper
 		CyNetwork myNet = createOrGetNetwork();
 		CyTable table = myNet.getDefaultNodeTable();
 		CyTable edgeTable = myNet.getDefaultEdgeTable();
-
+		Set<CyNode> nodesAdded = new HashSet<CyNode>();
+		Set<CyEdge> edgesPostponed = new HashSet<CyEdge>();
+		
 		int count = 0;
 		for (Record r : rs)
 		{
 			String src = "" + r.get("src");
 			String dest = "" + r.get("dest");
 
-			CyNode nodeSrc = createOrGet(src);
-			CyNode nodeDest = createOrGet(dest);
+			CyNode nodeSrc = createNodeIfNotExists(src, nodesAdded);
+			CyNode nodeDest = createNodeIfNotExists(dest, nodesAdded);
 
 			// set name attribute for new nodes
 			table.getRow(nodeSrc.getSUID()).set("id", src);
 			table.getRow(nodeDest.getSUID()).set("id", dest);
 
-			CyEdge edge = myNet.addEdge(nodeSrc, nodeDest, true);
-			count++;
-						
-			for (int i = 0; i < r.getMetaData().getNumCols(); ++i)
-			{				
-				String colName = r.getMetaData().getColumnName(i);
-				if ("src".equals(colName)) continue;
-				if ("dest".equals(colName)) continue;
-
-				if (colName.startsWith("src_"))
-				{
-					String adjColname = colName.substring("src_".length());
-					setNodeAttribute (nodeSrc, adjColname, r.get(i));
-				}
-				else if (colName.startsWith("dest_"))
-				{
-					String adjColname = colName.substring("dest_".length());
-					setNodeAttribute (nodeDest, adjColname, r.get(i));
-				}
-				else
-				{
-					setEdgeAttribute (edge, colName, r.get(i));	
-				}
-				
+			String interaction = "pp";
+			if (r.getMetaData().hasColumnName("interaction"))
+			{
+				interaction = "" + r.get("interaction"); 
 			}
+
+			CyEdge edge = createEdgeIfNotExists (nodeSrc, nodeDest, interaction, edgesPostponed);					
+			count++;
+			
+			createNetworkSecondPass(mq, r, nodeSrc, nodeDest, edge);					
+
 		}
 		
 		flushView();
@@ -292,7 +273,8 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper
 		return count;
 	}
 
-	private void setEdgeAttribute(CyEdge edge, String colName, Object value) 
+	@Override
+	protected void setEdgeAttribute(CyEdge edge, String colName, Object value) 
 	{
 		if (value == null) return; //ignore
 		
@@ -308,11 +290,69 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper
 		}
 		catch (IllegalStateException e)
 		{
-			// class cast problem...
+			// class cast problem when sparql result does not match column class.
 			// TODO...
 			e.printStackTrace();
 		}
 
+	}
+
+	@Override
+	protected void finalizeNetworkAddition(Set<CyNode> nodesAdded,
+			Set<CyEdge> edgesPostPoned) 
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void copyNodeCoordinates() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected CyNode createNodeIfNotExists(String key, Set<CyNode> nodesAdded) 
+	{
+		/** returns the node for a given key, or creates a new one if it doesn't exist. */
+		if (idMap.containsKey(key))
+		{
+			return idMap.get(key);
+		}
+		else
+		{
+			CyNode node = myNet.addNode();
+			idMap.put (key, node);
+			nodesAdded.add (node);
+			return node;
+		}
+	}
+
+	@Override
+	protected CyEdge createEdgeIfNotExists(CyNode nodeSrc, CyNode nodeDest, String interaction, Set<CyEdge> edgesPostponed) 
+	{
+		CyTable table = myNet.getDefaultEdgeTable();
+		CyEdge edge = null;
+		
+		// check existing edges between src and dest, to make sure we don't create duplicate edges.
+		/* CyEdge.Type.INCOMING or CyEdge.Type.OUTGOING do not seem to find any edges at all. //TODO: report bug */
+		for (CyEdge i : myNet.getConnectingEdgeList(nodeSrc, nodeDest, CyEdge.Type.ANY))
+		{
+			String actualInteraction = table.getRow(i.getSUID()).get("interaction", String.class);
+			if (ObjectUtils.safeEquals(interaction, actualInteraction))
+			{
+				// edge already exists
+				edge = i;
+				break;
+			}
+		}
+		
+		if (edge == null)
+		{
+			edge = myNet.addEdge(nodeSrc, nodeDest, true);
+			setEdgeAttribute(edge, "interaction", interaction);
+		}
+		return edge;
 	}
 
 }
