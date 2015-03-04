@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: GeneralSPARQL-cy3
 Bundle-SymbolicName: com.generalbioinformatics.cy3
-Bundle-Version: 1.0.0.WIP
+Bundle-Version: 1.11.0.WIP
 Import-Package: org.cytoscape.app;version="[3.0,4)",
  org.cytoscape.app.swing;version="[3.0,4)",
  org.cytoscape.application;version="[3.0,4)",
@@ -13,11 +13,12 @@ Import-Package: org.cytoscape.app;version="[3.0,4)",
  org.cytoscape.session;version="[3.0,4)",
  org.cytoscape.task;version="[3.0,4)",
  org.cytoscape.view.model;version="[3.0,4)",
- org.cytoscape.view.vizmap;version="[3.0,4)",
- org.cytoscape.work;version="[3.0,4)",
- org.cytoscape.view.vizmap.mappings;version="[3.0,4)",
+ org.cytoscape.view.presentation;version="[3.0,4)",
  org.cytoscape.view.presentation.property;version="[3.0,4)",
  org.cytoscape.view.presentation.property.values;version="[3.0,4)",
+ org.cytoscape.view.vizmap;version="[3.0,4)",
+ org.cytoscape.view.vizmap.mappings;version="[3.0,4)",
+ org.cytoscape.work;version="[3.0,4)",
  org.osgi.framework;version="[1.4,2)"
 Require-Bundle: com.generalbioinformatics.rdf.gui;bundle-version="1.0.0",
  nl.helixsoft.util;bundle-version="1.0.0",
@@ -25,4 +26,4 @@ Require-Bundle: com.generalbioinformatics.rdf.gui;bundle-version="1.0.0",
  com.springsource.org.jdom;bundle-version="1.1.0",
  org.apache.commons.codec;bundle-version="1.5.0",
  com.generalbioinformatics.rdf;bundle-version="1.0.0"
-Bundle-Activator: com.generalbioinformatics.cy3.CyActivator
+Bundle-Activator: com.generalbioinformatics.cy3.internal.CyActivator

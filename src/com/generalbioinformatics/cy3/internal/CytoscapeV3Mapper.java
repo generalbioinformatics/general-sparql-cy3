@@ -2,11 +2,13 @@
 * Copyright (c) 2015 General Bioinformatics Limited
 * Distributed under the GNU GPL v2. For full terms see the file LICENSE.
 */
-package com.generalbioinformatics.cy3;
+package com.generalbioinformatics.cy3.internal;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Paint;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +29,8 @@ import org.cytoscape.model.CyTable;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.model.VisualLexicon;
+import org.cytoscape.view.model.VisualProperty;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
 import org.cytoscape.view.presentation.property.values.NodeShape;
@@ -35,10 +39,10 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
+import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 
 import com.generalbioinformatics.rdf.gui.AbstractMarrsMapper;
 import com.generalbioinformatics.rdf.gui.MarrsProject;
-import com.generalbioinformatics.rdf.gui.MarrsQuery;
 import com.generalbioinformatics.rdf.gui.TripleStoreManager;
 
 public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
@@ -97,7 +101,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		}
 	}
 
-	private CyNetwork createOrGetNetwork()
+	/* package */ CyNetwork createOrGetNetwork()
 	{
 		if (myNet == null)
 		{
@@ -143,9 +147,20 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 			VisualMappingFunctionFactory vmfFactoryD = adapter.getVisualMappingFunctionDiscreteFactory();
 			VisualMappingFunctionFactory vmfFactoryP = adapter.getVisualMappingFunctionPassthroughFactory();
 
-
 			// To create a new VisualStyle object and set the mapping function
 			_vs = visualStyleFactory.createVisualStyle("General SPARQL visual style");
+
+			_vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, 18);
+			_vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_COLOR, Color.GRAY);
+			
+			_vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, Color.GRAY);
+//			_vs.setDefaultValue(BasicVisualLexicon.EDGE_PAINT, new Color (153, 153, 153));
+			_vs.setDefaultValue(BasicVisualLexicon.EDGE_TRANSPARENCY, 128);
+			_vs.setDefaultValue(BasicVisualLexicon.EDGE_WIDTH, 5.0);
+			_vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_FONT_FACE, new Font(Font.MONOSPACED, Font.BOLD, 18));
+			
+			//TODO: node position?
+//			_vs.setDefaultValue(, Color.LIGHT_GRAY);
 
 			//Use pass-through mapping
 //			String ctrAttrName1 = "SUID";
@@ -155,11 +170,78 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 			DiscreteMapping<String, NodeShape> typeMapping = (DiscreteMapping<String, NodeShape>)
 					vmfFactoryD.createVisualMappingFunction("type", String.class, BasicVisualLexicon.NODE_SHAPE);
 			
-			typeMapping.putMapValue("protein", NodeShapeVisualProperty.ROUND_RECTANGLE);
-			typeMapping.putMapValue("gene", NodeShapeVisualProperty.DIAMOND);
+			typeMapping.putMapValue("Protein", NodeShapeVisualProperty.ROUND_RECTANGLE);
+			typeMapping.putMapValue("gene", NodeShapeVisualProperty.PARALLELOGRAM);
 			typeMapping.putMapValue("reaction", NodeShapeVisualProperty.RECTANGLE);
+			typeMapping.putMapValue("SmallMolecule", NodeShapeVisualProperty.ELLIPSE);
+			typeMapping.putMapValue("disease", NodeShapeVisualProperty.HEXAGON);
+			typeMapping.putMapValue("pathway", NodeShapeVisualProperty.TRIANGLE);
+			typeMapping.putMapValue("GO", NodeShapeVisualProperty.DIAMOND);
 			
 			_vs.addVisualMappingFunction(typeMapping);
+
+			DiscreteMapping<String, Paint> colorMapping = (DiscreteMapping<String, Paint>)
+					vmfFactoryD.createVisualMappingFunction("type", String.class, BasicVisualLexicon.NODE_FILL_COLOR);
+			
+			colorMapping.putMapValue("Protein", new Color (153, 153, 255));
+			colorMapping.putMapValue("gene", new Color (153, 153, 255));
+			colorMapping.putMapValue("reaction", Color.BLUE);
+			colorMapping.putMapValue("SmallMolecule", new Color (255, 153, 153));
+			colorMapping.putMapValue("disease", new Color (153, 255, 255));
+			colorMapping.putMapValue("pathway", new Color (153, 255, 153));
+			colorMapping.putMapValue("GO", new Color (255, 255, 153));
+			
+			_vs.addVisualMappingFunction(colorMapping);
+
+			DiscreteMapping<String, Double> sizeMapping = (DiscreteMapping<String, Double>)
+					vmfFactoryD.createVisualMappingFunction("type", String.class, BasicVisualLexicon.NODE_SIZE);
+			
+			sizeMapping.putMapValue("Protein", 40.0);
+			sizeMapping.putMapValue("gene", 40.0);
+			sizeMapping.putMapValue("reaction", 20.0);
+			sizeMapping.putMapValue("SmallMolecule", 40.0);
+			sizeMapping.putMapValue("disease", 30.0);
+			sizeMapping.putMapValue("pathway", 30.0);
+			sizeMapping.putMapValue("GO", 30.0);
+			
+			_vs.addVisualMappingFunction(sizeMapping);
+
+			DiscreteMapping<String, Double> borderWidthMapping = (DiscreteMapping<String, Double>)
+					vmfFactoryD.createVisualMappingFunction("type", String.class, BasicVisualLexicon.NODE_BORDER_WIDTH);
+			
+			borderWidthMapping.putMapValue("Protein", 10.0);
+			borderWidthMapping.putMapValue("gene", 10.0);
+			borderWidthMapping.putMapValue("reaction", 0.1);
+			borderWidthMapping.putMapValue("SmallMolecule", 0.1);
+			borderWidthMapping.putMapValue("disease", 0.1);
+			borderWidthMapping.putMapValue("pathway", 0.1);
+			borderWidthMapping.putMapValue("GO", 0.1);
+			
+			_vs.addVisualMappingFunction(borderWidthMapping);
+
+			DiscreteMapping<String, Paint> borderColorMapping = (DiscreteMapping<String, Paint>)
+					vmfFactoryD.createVisualMappingFunction("species", String.class, BasicVisualLexicon.NODE_BORDER_PAINT);
+			
+			borderColorMapping.putMapValue("Homo sapiens", Color.MAGENTA);
+			borderColorMapping.putMapValue("Mus musculus", Color.CYAN);
+			
+			_vs.addVisualMappingFunction(borderColorMapping);
+
+			
+			PassthroughMapping<String, String> labelMapping = (PassthroughMapping<String, String>)vmfFactoryP.createVisualMappingFunction("name", String.class, BasicVisualLexicon.NODE_LABEL);
+			_vs.addVisualMappingFunction(labelMapping);
+
+			// the following code positions the label south-east of the node.
+			// See: https://groups.google.com/forum/#!topic/cytoscape-discuss/xnWYwIbU4eo
+			VisualLexicon lex = adapter.getRenderingEngineManager().getDefaultVisualLexicon();
+		    VisualProperty prop = lex.lookup(CyNode.class, "NODE_LABEL_POSITION");
+		    if (prop != null)
+		    {
+			    Object value = prop.parseSerializableString("SE,N,c,0.0,5.0"); // Put the north of the label on the southeast corner of the node
+			    _vs.setDefaultValue(prop, value);
+		    }
+//			PassthroughMapping<String, String> edgeLabelMapping = (PassthroughMapping<String, String>)vmfFactoryP.createVisualMappingFunction("provenance", String.class, BasicVisualLexicon.EDGE_LABEL);
+//			_vs.addVisualMappingFunction(edgeLabelMapping);
 
 			// Add the new style to the VisualMappingManager
 			vmmServiceRef.addVisualStyle(_vs);
@@ -205,10 +287,13 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		CyEventHelper eventHelper = adapter.getCyEventHelper();
 		eventHelper.flushPayloadEvents(); // will cause node views to be created...
 		
-		VisualStyle vs = createOrGetVisualStyle();
-		vs.apply(myView);
-		
-		myView.updateView();	
+		if (myView != null) // myView could be null if the first query returned zero results, so nodes were created. This is not a bug.
+		{
+			VisualStyle vs = createOrGetVisualStyle();
+			vs.apply(myView);
+			
+			myView.updateView();
+		}
 	}
 	
 	@Override

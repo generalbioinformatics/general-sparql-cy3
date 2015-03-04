@@ -2,7 +2,7 @@
 * Copyright (c) 2015 General Bioinformatics Limited
 * Distributed under the GNU GPL v2. For full terms see the file LICENSE.
 */
-package com.generalbioinformatics.cy3;
+package com.generalbioinformatics.cy3.internal;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.swing.AbstractAction;
@@ -27,6 +29,7 @@ import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyTableManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
+import org.cytoscape.task.NodeViewTaskFactory;
 import org.cytoscape.work.ServiceProperties;
 import org.cytoscape.work.TaskFactory;
 import org.jdom.JDOMException;
@@ -35,6 +38,7 @@ import org.xml.sax.InputSource;
 
 import com.generalbioinformatics.rdf.gui.MarrsPreference;
 import com.generalbioinformatics.rdf.gui.MarrsProject;
+import com.generalbioinformatics.rdf.gui.MarrsQuery;
 import com.generalbioinformatics.rdf.gui.ProjectManager;
 import com.generalbioinformatics.rdf.gui.TripleStoreManager;
 
@@ -46,7 +50,7 @@ public class CyActivator extends AbstractCyActivator
 	private TripleStoreManager conMgr;
 	private PreferenceManager prefs; 
 	private BundleContext context;
-
+	
 	@Override
 	public void start(BundleContext context) throws Exception 
 	{
@@ -76,18 +80,18 @@ public class CyActivator extends AbstractCyActivator
 			projectMgr = new ProjectManager(frame, prefs, conMgr, mapper);
 			loadPreviousProject();
 
-			registerMenu (context, "Apps.MARRS", conMgr.configureAction);
-			registerMenu (context, "Apps.MARRS", projectMgr.editAction);
-			registerMenu (context, "Apps.MARRS", projectMgr.downloadAction);
+			registerMenu (context, "Apps.General SPARQL", conMgr.configureAction);
+			registerMenu (context, "Apps.General SPARQL", projectMgr.editAction);
+//			registerMenu (context, "Apps.General SPARQL", projectMgr.downloadAction);
 
 			if (!SIMPLIFIED_VERSION)
 			{
-				registerMenu (context, "Apps.MARRS", projectMgr.loadAction);
-				registerMenu (context, "Apps.MARRS", projectMgr.saveAction);
+				registerMenu (context, "Apps.General SPARQL", projectMgr.loadAction);
+				registerMenu (context, "Apps.General SPARQL", projectMgr.saveAction);
 
 				for (AbstractAction action : projectMgr.recentActions)
 				{
-					registerMenu(context, "Apps.MARRS.Recent", action);
+					registerMenu(context, "Apps.General SPARQL.Recent", action);
 				}
 			}
 			else
@@ -99,10 +103,12 @@ public class CyActivator extends AbstractCyActivator
 			// Project-specific menu items
 			for (AbstractAction action : projectMgr.getSearchQueries())
 			{
-				registerMenu (context, "Apps.MARRS.Search", action);
+				registerMenu (context, "Apps.General SPARQL.Search", action);
 			}
 
 			registerNodeContextMenu(context, new MarrsNodeViewContextMenuFactory(projectMgr, mapper));
+			
+//			registerNodeViewContextMenu(projectMgr, mapper);
 
 		} 
 		catch (Throwable t) 
@@ -112,14 +118,38 @@ public class CyActivator extends AbstractCyActivator
 		}
 	}
 
+	/*
+	 // EXPERIMENT using node view task factory instead of node task factory. Not working well so far.
+	 
+	private void registerNodeViewContextMenu(ProjectManager projectMgr, CytoscapeV3Mapper mapper)
+	{
+		MarrsProject project = projectMgr.getProject();
+		if (project != null) 
+		{				
+			for (int i = 0; i < project.getRowCount(); ++i)
+			{
+				MarrsQuery q = project.getRow(i);
+				
+				RclickActions action = new RclickActions(q, projectMgr, mapper);
+				Properties myNodeViewTaskFactoryProps = new Properties();
+				myNodeViewTaskFactoryProps.setProperty("title", q.getTitle());
+//				myNodeViewTaskFactoryProps.setProperty("preferredMenu", "SPARQL");
+				registerService(context, action, NodeViewTaskFactory.class, myNodeViewTaskFactoryProps);
+			}							
+		}
+		
+	}
+	 */
+	
 	private void registerNodeContextMenu(BundleContext context,
 			CyNodeViewContextMenuFactory myNodeViewContextMenuFactory) 
 	{
+		
 		Properties myNodeViewContextMenuFactoryProps = new Properties();
 		myNodeViewContextMenuFactoryProps.put("preferredMenu", "Apps");
 		registerAllServices(context, myNodeViewContextMenuFactory, myNodeViewContextMenuFactoryProps);
 	}
-
+	
 	public void registerMenu(BundleContext context, String parentMenu, AbstractAction action)
 	{
 
@@ -148,7 +178,7 @@ public class CyActivator extends AbstractCyActivator
 
 	private MarrsProject getBundledProject() throws JDOMException, IOException
 	{
-		InputStream is = CyActivator.class.getClassLoader().getResourceAsStream("com/generalbioinformatics/cy3/project.xml");
+		InputStream is = CyActivator.class.getClassLoader().getResourceAsStream("com/generalbioinformatics/cy3/internal/project.xml");
 		MarrsProject bundledProject = MarrsProject.createFromFile(new InputSource(is));			
 		return bundledProject;
 	}

@@ -2,7 +2,7 @@
 * Copyright (c) 2015 General Bioinformatics Limited
 * Distributed under the GNU GPL v2. For full terms see the file LICENSE.
 */
-package com.generalbioinformatics.cy3;
+package com.generalbioinformatics.cy3.internal;
 
 import javax.swing.AbstractAction;
 import javax.swing.SwingUtilities;

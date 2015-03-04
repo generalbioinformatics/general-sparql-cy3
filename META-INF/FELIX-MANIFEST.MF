@@ -2,8 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: GeneralSPARQL-cy3
 Bundle-SymbolicName: com.generalbioinformatics.cy3
-Bundle-Version: 1.0.0.WIP
-Export-Package: com.generalbioinformatics.cy3
+Bundle-Version: 1.11.0.WIP
 Bundle-ClassPath: .,
  commons-codec-1.5.jar,
  org.osgi.core-1.4.0.jar,
@@ -29,6 +28,7 @@ Import-Package: org.cytoscape.application;version="[3.0,4)",
  org.cytoscape.app;version="[3.0,4)",
  org.cytoscape.app.swing;version="[3.0,4)",
  org.cytoscape.view.vizmap.mappings;version="[3.0,4)",
+ org.cytoscape.view.presentation;version="[3.0,4)",
  org.cytoscape.view.presentation.property;version="[3.0,4)",
  org.cytoscape.view.presentation.property.values;version="[3.0,4)",
  org.osgi.framework;version="[1.5,2)",
@@ -48,4 +48,4 @@ Import-Package: org.cytoscape.application;version="[3.0,4)",
  javax.xml.stream,
  javax.xml.namespace,
  javax.security.auth.x500
-Bundle-Activator: com.generalbioinformatics.cy3.CyActivator
+Bundle-Activator: com.generalbioinformatics.cy3.internal.CyActivator
