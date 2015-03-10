@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 
 import nl.helixsoft.recordstream.StreamException;
-import nl.helixsoft.util.StringUtils;
 
 import org.cytoscape.application.swing.CyMenuItem;
 import org.cytoscape.application.swing.CyNodeViewContextMenuFactory;
@@ -71,10 +71,10 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 				q = project.getSubstitutedQuery(mq);
 				mapper.createNetwork(q, mq);
 			} catch (MarrsException e2) {
-				JOptionPane.showMessageDialog(null, "Error preparing query", e2.getMessage(), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, "Error preparing query", e2.getMessage(), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (StreamException e1) {
-				JOptionPane.showMessageDialog(null, "Error executing query", e1.getMessage(), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, "Error executing query", e1.getMessage(), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		
@@ -82,11 +82,13 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 	
 	private final ProjectManager projectMgr;
 	private final CytoscapeV3Mapper mapper;
+	private final JFrame frame;
 	
-	MarrsNodeViewContextMenuFactory(ProjectManager value, CytoscapeV3Mapper mapper)
+	MarrsNodeViewContextMenuFactory(ProjectManager value, CytoscapeV3Mapper mapper, JFrame frame)
 	{
 		this.projectMgr = value;
 		this.mapper = mapper;
+		this.frame = frame;
 	}
 	
 	@Override
@@ -138,6 +140,6 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 
 //	public void actionPerformed(ActionEvent e) {
 //		// Write your own function here.
-//		JOptionPane.showMessageDialog(null, "MyNodeViewContextMenuFactory action worked.");
+//		JOptionPane.showMessageDialog(frame, "MyNodeViewContextMenuFactory action worked.");
 //	}
 }

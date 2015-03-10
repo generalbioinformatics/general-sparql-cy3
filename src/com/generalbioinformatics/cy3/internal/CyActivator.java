@@ -24,6 +24,7 @@ import nl.helixsoft.util.FileUtils;
 
 import org.apache.commons.codec.binary.Base64;
 import org.cytoscape.app.swing.CySwingAppAdapter;
+import org.cytoscape.application.swing.AbstractCyAction;
 import org.cytoscape.application.swing.CyNodeViewContextMenuFactory;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyTableManager;
@@ -76,7 +77,7 @@ public class CyActivator extends AbstractCyActivator
 			CySwingAppAdapter adapter = getService(context, CySwingAppAdapter.class);
 			CyNetworkNaming cyNetworkNaming = getService(context, CyNetworkNaming.class);
 
-			final CytoscapeV3Mapper mapper = new CytoscapeV3Mapper(adapter, conMgr, cyNetworkNaming);
+			final CytoscapeV3Mapper mapper = new CytoscapeV3Mapper(adapter, conMgr, cyNetworkNaming, frame);
 			projectMgr = new ProjectManager(frame, prefs, conMgr, mapper);
 			loadPreviousProject();
 
@@ -106,9 +107,11 @@ public class CyActivator extends AbstractCyActivator
 				registerMenu (context, "Apps.General SPARQL.Search", action);
 			}
 
-			registerNodeContextMenu(context, new MarrsNodeViewContextMenuFactory(projectMgr, mapper));
+			registerNodeContextMenu(context, new MarrsNodeViewContextMenuFactory(projectMgr, mapper, frame));
 			
 //			registerNodeViewContextMenu(projectMgr, mapper);
+			
+//			registerMenuTest(adapter);
 
 		} 
 		catch (Throwable t) 
@@ -141,6 +144,34 @@ public class CyActivator extends AbstractCyActivator
 	}
 	 */
 	
+	static class MySubMenuItemAction extends AbstractCyAction 
+	{
+		public MySubMenuItemAction(CySwingApplication desktopApp){
+			super("My Sub MenuItem...");
+			setPreferredMenu("Apps.My MenuItem");
+			//setMenuGravity(2.0f);
+
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JOptionPane.showMessageDialog(null, "It works!");
+			
+		}
+	}	   
+
+//	private void registerMenuTest() 
+//	{
+//		
+//					   // In the start method of your CyActivator class:
+//			   //   Create an instance:
+//			   MySubMenuItemAction action = new MySubMenuItemAction(cytoscapeDesktopService);
+//			   
+//			   //   Register it as a service:
+//			   registerService(bc,action,CyAction.class, new Properties());		// TODO Auto-generated method stub
+//
+//	}
+
 	private void registerNodeContextMenu(BundleContext context,
 			CyNodeViewContextMenuFactory myNodeViewContextMenuFactory) 
 	{
@@ -169,11 +200,8 @@ public class CyActivator extends AbstractCyActivator
 		// view exists.
 		//		properties.put(ServiceProperties.ENABLE_FOR, "networkAndView");
 
-		registerService(context,
-				new ActionWrapper(action), // Implementation
-				TaskFactory.class, // Interface
-				properties); // Service properties
-
+		registerService(context, new ActionWrapper(action), TaskFactory.class, properties); 
+		
 	}
 
 	private MarrsProject getBundledProject() throws JDOMException, IOException

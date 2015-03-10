@@ -48,7 +48,8 @@ import com.generalbioinformatics.rdf.gui.TripleStoreManager;
 public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 {
 	private final CyAppAdapter adapter;
-
+	private final JFrame frame;
+	
 	private CyNetwork myNet;
 	private CyNetworkView myView;
 	private VisualStyle _vs;
@@ -57,11 +58,12 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 
 	private final CyNetworkNaming cyNetworkNaming;
 	
-	public CytoscapeV3Mapper(CySwingAppAdapter adapter, TripleStoreManager conMgr, CyNetworkNaming cyNetworkNaming) 
+	public CytoscapeV3Mapper(CySwingAppAdapter adapter, TripleStoreManager conMgr, CyNetworkNaming cyNetworkNaming, JFrame frame) 
 	{
 		super (conMgr);
 		this.adapter = adapter;
 		this.cyNetworkNaming = cyNetworkNaming;
+		this.frame = frame;
 	}
 
 	private void createNodeAttributeIfNotExists(String colName)
