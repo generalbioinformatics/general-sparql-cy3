@@ -57,13 +57,15 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	private Map<String, CyNode> idMap = new HashMap<String, CyNode>();
 
 	private final CyNetworkNaming cyNetworkNaming;
+	private final CyActivator activator;
 	
-	public CytoscapeV3Mapper(CySwingAppAdapter adapter, TripleStoreManager conMgr, CyNetworkNaming cyNetworkNaming, JFrame frame) 
+	public CytoscapeV3Mapper(CyActivator activator, CySwingAppAdapter adapter, TripleStoreManager conMgr, CyNetworkNaming cyNetworkNaming, JFrame frame) 
 	{
 		super (conMgr);
 		this.adapter = adapter;
 		this.cyNetworkNaming = cyNetworkNaming;
 		this.frame = frame;
+		this.activator = activator;
 	}
 
 	private void createNodeAttributeIfNotExists(String colName)
@@ -318,8 +320,9 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	}
 	
 	@Override
-	public void setProject(MarrsProject arg0) {
-		// TODO Auto-generated method stub
+	public void setProject(MarrsProject newProject)
+	{
+		activator.updateSearchMenu();
 	}
 
 	/*

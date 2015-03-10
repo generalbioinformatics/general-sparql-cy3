@@ -8,29 +8,22 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 
 import nl.helixsoft.gui.preferences.PreferenceManager;
 import nl.helixsoft.util.FileUtils;
 
-import org.apache.commons.codec.binary.Base64;
 import org.cytoscape.app.swing.CySwingAppAdapter;
 import org.cytoscape.application.swing.AbstractCyAction;
 import org.cytoscape.application.swing.CyNodeViewContextMenuFactory;
 import org.cytoscape.application.swing.CySwingApplication;
-import org.cytoscape.model.CyTableManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
-import org.cytoscape.task.NodeViewTaskFactory;
 import org.cytoscape.work.ServiceProperties;
 import org.cytoscape.work.TaskFactory;
 import org.jdom.JDOMException;
@@ -39,18 +32,62 @@ import org.xml.sax.InputSource;
 
 import com.generalbioinformatics.rdf.gui.MarrsPreference;
 import com.generalbioinformatics.rdf.gui.MarrsProject;
-import com.generalbioinformatics.rdf.gui.MarrsQuery;
 import com.generalbioinformatics.rdf.gui.ProjectManager;
 import com.generalbioinformatics.rdf.gui.TripleStoreManager;
 
 public class CyActivator extends AbstractCyActivator 
 {
-	public static final boolean SIMPLIFIED_VERSION = false;
-	
 	private ProjectManager projectMgr;
 	private TripleStoreManager conMgr;
 	private PreferenceManager prefs; 
 	private BundleContext context;
+	
+	private CySwingApplication cySwingApplication;
+	
+	private JMenu recentMenu = null;
+	
+	private AbstractAction DUMMY = new AbstractAction("dummy") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+			
+		} 
+	};
+
+	private void updateRecentMenu()
+	{
+		if (recentMenu == null)
+		{
+			registerMenu(context, "Apps.General SPARQL.Recent", DUMMY);
+			recentMenu = cySwingApplication.getJMenu("Apps.General SPARQL.Recent");	
+		}
+		
+		recentMenu.removeAll();
+		
+		for (AbstractAction action : projectMgr.recentActions)
+		{
+			recentMenu.add (action);
+		}		
+	}
+	
+	private JMenu searchMenu = null;
+	
+	void updateSearchMenu()
+	{
+		if (searchMenu == null)
+		{
+			registerMenu(context, "Apps.General SPARQL.Search", DUMMY);
+			searchMenu = cySwingApplication.getJMenu("Apps.General SPARQL.Search");	
+		}
+		
+		searchMenu.removeAll();
+		
+		for (AbstractAction action : projectMgr.getSearchQueries())
+		{
+			searchMenu.add (action);
+		}
+
+	}
 	
 	@Override
 	public void start(BundleContext context) throws Exception 
@@ -69,7 +106,7 @@ public class CyActivator extends AbstractCyActivator
 			prefs = new PreferenceManager(propsFile, defaultValues);
 			prefs.load();
 
-			CySwingApplication cySwingApplication = getService(context, CySwingApplication.class);
+			cySwingApplication = getService(context, CySwingApplication.class);
 			JFrame frame = cySwingApplication.getJFrame();
 
 			conMgr = new TripleStoreManager(frame, prefs);
@@ -77,7 +114,7 @@ public class CyActivator extends AbstractCyActivator
 			CySwingAppAdapter adapter = getService(context, CySwingAppAdapter.class);
 			CyNetworkNaming cyNetworkNaming = getService(context, CyNetworkNaming.class);
 
-			final CytoscapeV3Mapper mapper = new CytoscapeV3Mapper(adapter, conMgr, cyNetworkNaming, frame);
+			final CytoscapeV3Mapper mapper = new CytoscapeV3Mapper(this, adapter, conMgr, cyNetworkNaming, frame);
 			projectMgr = new ProjectManager(frame, prefs, conMgr, mapper);
 			loadPreviousProject();
 
@@ -85,27 +122,11 @@ public class CyActivator extends AbstractCyActivator
 			registerMenu (context, "Apps.General SPARQL", projectMgr.editAction);
 //			registerMenu (context, "Apps.General SPARQL", projectMgr.downloadAction);
 
-			if (!SIMPLIFIED_VERSION)
-			{
-				registerMenu (context, "Apps.General SPARQL", projectMgr.loadAction);
-				registerMenu (context, "Apps.General SPARQL", projectMgr.saveAction);
-
-				for (AbstractAction action : projectMgr.recentActions)
-				{
-					registerMenu(context, "Apps.General SPARQL.Recent", action);
-				}
-			}
-			else
-			{
-				//TODO: disabled for now...
-//				registerMenu(context, "Apps.MARRS", new CheckForUpdatesAction());
-			}
+			registerMenu (context, "Apps.General SPARQL", projectMgr.loadAction);
+//				registerMenu (context, "Apps.General SPARQL", projectMgr.saveAction);				
+			updateRecentMenu();
 
 			// Project-specific menu items
-			for (AbstractAction action : projectMgr.getSearchQueries())
-			{
-				registerMenu (context, "Apps.General SPARQL.Search", action);
-			}
 
 			registerNodeContextMenu(context, new MarrsNodeViewContextMenuFactory(projectMgr, mapper, frame));
 			
@@ -160,18 +181,6 @@ public class CyActivator extends AbstractCyActivator
 		}
 	}	   
 
-//	private void registerMenuTest() 
-//	{
-//		
-//					   // In the start method of your CyActivator class:
-//			   //   Create an instance:
-//			   MySubMenuItemAction action = new MySubMenuItemAction(cytoscapeDesktopService);
-//			   
-//			   //   Register it as a service:
-//			   registerService(bc,action,CyAction.class, new Properties());		// TODO Auto-generated method stub
-//
-//	}
-
 	private void registerNodeContextMenu(BundleContext context,
 			CyNodeViewContextMenuFactory myNodeViewContextMenuFactory) 
 	{
@@ -200,8 +209,7 @@ public class CyActivator extends AbstractCyActivator
 		// view exists.
 		//		properties.put(ServiceProperties.ENABLE_FOR, "networkAndView");
 
-		registerService(context, new ActionWrapper(action), TaskFactory.class, properties); 
-		
+		registerService(context, new ActionWrapper(action), TaskFactory.class, properties);
 	}
 
 	private MarrsProject getBundledProject() throws JDOMException, IOException
@@ -216,57 +224,27 @@ public class CyActivator extends AbstractCyActivator
 		try 
 		{
 
-			if (SIMPLIFIED_VERSION)
+			File projectFile = prefs.getFile(MarrsPreference.MARRS_PROJECT_FILE);
+			try
 			{
-				MarrsProject cachedProject = null;
-				MarrsProject bundledProject = getBundledProject();
-				
-				File cacheFile = ProjectManager.getProjectCacheFile();
-				if (cacheFile.exists())
+				if (projectFile.exists())
 				{
-					cachedProject = MarrsProject.createFromFile(cacheFile);
+					projectMgr.loadProject (projectFile);
 				}
-
-				MarrsProject newest = null;
-
-				if (cachedProject == null)
-				{
-					newest = bundledProject;
-				}
-				else
-				{
-					newest = 
-							(cachedProject.isSameOrNewerThan(bundledProject))
-							? cachedProject : bundledProject;
-				}
-
-				projectMgr.setProject(newest);
 			}
-			
-			else
+			catch (JDOMException e) 
 			{
-				File projectFile = prefs.getFile(MarrsPreference.MARRS_PROJECT_FILE);
-				try
-				{
-					if (projectFile.exists())
-					{
-						projectMgr.loadProject (projectFile);
-					}
-				}
-				catch (JDOMException e) 
-				{
-					// couldn't auto-load, starting with empty project
-				} 
-				catch (IOException e) 
-				{
-					// couldn't auto-load, starting with empty project
-				}
-			
-				if (projectMgr.getProject() == null)
-				{
-					MarrsProject bundledProject = getBundledProject();
-					projectMgr.setProject(bundledProject);
-				}
+				// couldn't auto-load, starting with empty project
+			} 
+			catch (IOException e) 
+			{
+				// couldn't auto-load, starting with empty project
+			}
+		
+			if (projectMgr.getProject() == null)
+			{
+				MarrsProject bundledProject = getBundledProject();
+				projectMgr.setProject(bundledProject);
 			}
 		}
 		catch (JDOMException e) 
@@ -279,63 +257,6 @@ public class CyActivator extends AbstractCyActivator
 		}
 
 		
-	}
-
-	private class CheckForUpdatesAction extends AbstractAction
-	{
-		CheckForUpdatesAction()
-		{
-			super ("Check for plugin updates");
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) 
-		{
-			CySwingApplication cySwingApplication = getService(context, CySwingApplication.class);
-			JFrame frame = cySwingApplication.getJFrame();
-
-			// check local version			
-			String url = prefs.get(MarrsPreference.MARRS_PLUGIN_UPDATE_URL);
-			try {
-				URLConnection conn = new URL(url).openConnection();
-
-				//TODO: here we assume that if we need authentication for currently configured sparql endpoint,
-				// we can use it also for the project properties file. This may not always hold. 
-				if (prefs.getBoolean(MarrsPreference.MARRS_SPARQL_AUTHENTICATE))
-				{
-					String authString = prefs.get(MarrsPreference.MARRS_SPARQL_USER) + ":" + prefs.get(MarrsPreference.MARRS_SPARQL_PASS);
-					byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
-					String authStringEnc = new String(authEncBytes);
-					conn.setRequestProperty("Authorization", "Basic " + authStringEnc);
-				}
-
-				InputStream inr = conn.getInputStream();
-				Properties remoteProps = new Properties();
-				remoteProps.load(inr);
-
-				InputStream inl = CyActivator.class.getClassLoader().getResourceAsStream("com/generalbioinformatics/cy3/plugin.props");
-				Properties localProps = new Properties();
-				localProps.load(inl);
-
-				String info = "<html>Server version: " + remoteProps.getProperty("pluginVersion") + " built " + remoteProps.getProperty("buildtime") +  
-						"<br>Local version: " + localProps.getProperty("pluginVersion")  + " built " + localProps.getProperty("buildtime");
-
-				JOptionPane.showMessageDialog(frame, info);
-			} 
-			catch (MalformedURLException e1) 
-			{
-				JOptionPane.showMessageDialog(frame, "Malformed URL: '" + url + "' " + e1.getMessage());
-				e1.printStackTrace();
-			}
-			catch (IOException e1) 
-			{
-				JOptionPane.showMessageDialog(frame, "Error reading properties file: " + e1.getMessage());
-				e1.printStackTrace();
-			}
-
-		}
-
-
 	}
 
 }

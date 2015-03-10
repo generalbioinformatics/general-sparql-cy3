@@ -138,8 +138,4 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 		return cyMenuItem;
 	}
 
-//	public void actionPerformed(ActionEvent e) {
-//		// Write your own function here.
-//		JOptionPane.showMessageDialog(frame, "MyNodeViewContextMenuFactory action worked.");
-//	}
 }
