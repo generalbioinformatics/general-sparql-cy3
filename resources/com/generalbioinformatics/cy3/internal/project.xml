@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MarrsProject title="Public Sparql Endpoints" schemaversion="0.2" pubversion="@PUBLISHVERSION@">
+<MarrsProject title="Public Sparql Endpoints" schemaversion="0.4" pubversion="@PUBLISHVERSION@">
 	<Query title="Search for a protein by preferred name" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
 PREFIX up:<http://purl.uniprot.org/core/> 
 PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
@@ -659,6 +659,34 @@ WHERE
 	<Param key="GOTERM" val="glycolysis" />
 	<Param key="PUBURI" val="http://identifiers.org/pubmed/16859172" />
 	<Param key="CONFIDENCE" val="20" />
+	
+	<NodeAttribute key="type" value="Protein">
+		<Vizmap prop="NodeShape" value="ROUND_RECTANGLE"/>
+	</NodeAttribute>
+
+	<NodeAttribute key="type" value="gene">
+		<Vizmap prop="NodeShape" value="PARALLELOGRAM"/>
+	</NodeAttribute>
+
+	<NodeAttribute key="type" value="reaction">
+		<Vizmap prop="NodeShape" value="RECTANGLE"/>
+	</NodeAttribute>
+
+	<NodeAttribute key="type" value="SmallMolecule">
+		<Vizmap prop="NodeShape" value="ELLIPSE"/>
+	</NodeAttribute>
+
+	<NodeAttribute key="type" value="disease">
+		<Vizmap prop="NodeShape" value="HEXAGON"/>
+	</NodeAttribute>
+
+	<NodeAttribute key="type" value="pathway">
+		<Vizmap prop="NodeShape" value="TRIANGLE"/>
+	</NodeAttribute>
+
+	<NodeAttribute key="type" value="GO">
+		<Vizmap prop="NodeShape" value="DIAMOND"/>
+	</NodeAttribute>
 
 </MarrsProject>
 

@@ -111,9 +111,9 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		{
 			myNet = adapter.getCyNetworkFactory().createNetwork();
 			myNet.getRow(myNet).set(CyNetwork.NAME, cyNetworkNaming.getSuggestedNetworkTitle("General SPARQL"));
+			adapter.getCyNetworkManager().addNetwork(myNet);
 			
 			createNodeAttributeIfNotExists("id");			
-			adapter.getCyNetworkManager().addNetwork(myNet);
 			
 			myView = null;
 		}
@@ -122,29 +122,18 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		if (myView == null) 
 		{
 			CyNetworkViewManager cyNetworkViewManager = adapter.getCyNetworkViewManager(); 
-			final Collection<CyNetworkView> views = cyNetworkViewManager.getNetworkViews(myNet);
-			
-			if(views.size() != 0) 
-			{
-				myView = views.iterator().next();
-			}
-			else
-			{
-				// create a new view for my network
-				myView = adapter.getCyNetworkViewFactory().createNetworkView(myNet);
-				cyNetworkViewManager.addNetworkView(myView);
-			}
+			myView = adapter.getCyNetworkViewFactory().createNetworkView(myNet);
+			cyNetworkViewManager.addNetworkView(myView);
 		}
 		return myNet;
 	}
 
 	private VisualStyle createOrGetVisualStyle()
 	{
+		VisualMappingManager vmmServiceRef = adapter.getVisualMappingManager();
+		
 		if (_vs == null)
 		{
-			// To get references to services in CyActivator class
-			VisualMappingManager vmmServiceRef = adapter.getVisualMappingManager();
-
 			VisualStyleFactory visualStyleFactory = adapter.getVisualStyleFactory();
 
 			VisualMappingFunctionFactory vmfFactoryC = adapter.getVisualMappingFunctionContinuousFactory();
@@ -152,7 +141,8 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 			VisualMappingFunctionFactory vmfFactoryP = adapter.getVisualMappingFunctionPassthroughFactory();
 
 			// To create a new VisualStyle object and set the mapping function
-			_vs = visualStyleFactory.createVisualStyle("General SPARQL visual style");
+			_vs = visualStyleFactory.createVisualStyle(vmmServiceRef.getDefaultVisualStyle());
+			_vs.setTitle ("General SPARQL visual style");
 
 			_vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, 18);
 			_vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_COLOR, Color.GRAY);
@@ -163,14 +153,6 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 			_vs.setDefaultValue(BasicVisualLexicon.EDGE_WIDTH, 5.0);
 			_vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_FONT_FACE, new Font(Font.MONOSPACED, Font.BOLD, 18));
 			
-			//TODO: node position?
-//			_vs.setDefaultValue(, Color.LIGHT_GRAY);
-
-			//Use pass-through mapping
-//			String ctrAttrName1 = "SUID";
-//			PassthroughMapping pMapping = (PassthroughMapping) vmfFactoryP.createVisualMappingFunction(ctrAttrName1, 
-//					String.class, "", BasicVisualLexicon.NODE_LABEL);
-
 			DiscreteMapping<String, NodeShape> typeMapping = (DiscreteMapping<String, NodeShape>)
 					vmfFactoryD.createVisualMappingFunction("type", String.class, BasicVisualLexicon.NODE_SHAPE);
 			
@@ -249,7 +231,9 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 
 			// Add the new style to the VisualMappingManager
 			vmmServiceRef.addVisualStyle(_vs);
+			
 		}
+		vmmServiceRef.setVisualStyle(_vs, myView);
 		return _vs;
 	}
 	
@@ -295,7 +279,6 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		{
 			VisualStyle vs = createOrGetVisualStyle();
 			vs.apply(myView);
-			
 			myView.updateView();
 		}
 	}

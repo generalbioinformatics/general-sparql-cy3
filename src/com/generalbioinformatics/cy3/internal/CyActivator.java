@@ -20,12 +20,12 @@ import nl.helixsoft.util.FileUtils;
 
 import org.cytoscape.app.swing.CySwingAppAdapter;
 import org.cytoscape.application.swing.AbstractCyAction;
+import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CyNodeViewContextMenuFactory;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.work.ServiceProperties;
-import org.cytoscape.work.TaskFactory;
 import org.jdom.JDOMException;
 import org.osgi.framework.BundleContext;
 import org.xml.sax.InputSource;
@@ -45,13 +45,9 @@ public class CyActivator extends AbstractCyActivator
 	private CySwingApplication cySwingApplication;
 	
 	private JMenu recentMenu = null;
-	
-	private AbstractAction DUMMY = new AbstractAction("dummy") {
+	private final AbstractAction DUMMY = new AbstractAction("dummy") {
 		@Override
-		public void actionPerformed(ActionEvent e) {
-			// TODO Auto-generated method stub
-			
-		} 
+		public void actionPerformed(ActionEvent e) { }
 	};
 
 	private void updateRecentMenu()
@@ -71,7 +67,6 @@ public class CyActivator extends AbstractCyActivator
 	}
 	
 	private JMenu searchMenu = null;
-	
 	void updateSearchMenu()
 	{
 		if (searchMenu == null)
@@ -209,7 +204,7 @@ public class CyActivator extends AbstractCyActivator
 		// view exists.
 		//		properties.put(ServiceProperties.ENABLE_FOR, "networkAndView");
 
-		registerService(context, new ActionWrapper(action), TaskFactory.class, properties);
+		registerService(context, new ActionWrapper(action, parentMenu), CyAction.class, properties);
 	}
 
 	private MarrsProject getBundledProject() throws JDOMException, IOException

@@ -4,58 +4,29 @@
 */
 package com.generalbioinformatics.cy3.internal;
 
+import java.awt.event.ActionEvent;
+
 import javax.swing.AbstractAction;
-import javax.swing.SwingUtilities;
+import javax.swing.Action;
 
-import org.cytoscape.work.Task;
-import org.cytoscape.work.TaskFactory;
-import org.cytoscape.work.TaskIterator;
-import org.cytoscape.work.TaskMonitor;
+import org.cytoscape.application.swing.AbstractCyAction;
 
-public class ActionWrapper implements TaskFactory 
+public class ActionWrapper extends AbstractCyAction 
 {
-	@Override
-	public boolean isReady() {
-		// This method lets the factory do its own sanity checks to verify
-		// it's ready to create and run its tasks.
-		return true;
-	}
-
-	private final AbstractAction parent;
+	private Action delegate;
 	
-	public ActionWrapper (AbstractAction parent)
+	ActionWrapper(Action delegate, String preferredMenu)
 	{
-//		super("" + parent.getValue(AbstractAction.NAME), cyApplicationManager, null, null);
-		this.parent = parent;
-//		setPreferredMenu("Apps.MARRS");
-	}
-
-	private class TaskWrapper implements Task
-	{
-		@Override
-		public void cancel() {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void run(TaskMonitor arg0) throws Exception 
-		{
-			SwingUtilities.invokeLater(new Runnable()
-			{
-				@Override
-				public void run() {
-					parent.actionPerformed(null);					
-				}	
-			});
-		}
+		super((String)delegate.getValue(AbstractAction.NAME));
+        setPreferredMenu(preferredMenu);
+        //setMenuGravity(2.0f);
+        this.delegate = delegate;
 	}
 	
 	@Override
-	public TaskIterator createTaskIterator() 
+	public void actionPerformed(ActionEvent e) 
 	{
-		return new TaskIterator(new TaskWrapper());
+		delegate.actionPerformed(e);
 	}
-
 
 }
