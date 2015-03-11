@@ -71,7 +71,21 @@ jar {
     from configurations.releaseJars
     
     manifest {
-        from 'META-INF/FELIX-MANIFEST.MF'
+					
+		from( 'META-INF/MANIFEST.MF' ) {
+			eachEntry {
+				// exclude existing manifest entry
+				if (it.key == "Require-Bundle")
+					it.exclude()
+					
+				// replace manifest entry with new value
+				if (it.key == 'Bundle-Version')
+					it.value = version
+			}
+		}
+
+		// set value of new manifest entry
+		attributes 'Bundle-Classpath': ".," + configurations.releaseJars.collect { File f -> f.getName() }.join(",")
     }
 	
 }

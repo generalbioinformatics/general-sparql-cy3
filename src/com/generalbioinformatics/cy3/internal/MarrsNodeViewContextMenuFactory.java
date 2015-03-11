@@ -32,7 +32,6 @@ import com.generalbioinformatics.rdf.gui.ProjectManager;
 
 public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFactory //, ActionListener
 {
-	
 	private class QueryAction extends AbstractAction
 	{
 		private String id;
