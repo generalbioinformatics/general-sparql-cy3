@@ -308,51 +308,6 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		activator.updateSearchMenu();
 	}
 
-	/*
-	@Override
-	public int createNetwork(String q, MarrsQuery mq)
-			throws StreamException 
-	{
-		RecordStream rs = conMgr.getConnection().sparqlSelect(q);
-
-		CyNetwork myNet = createOrGetNetwork();
-		CyTable table = myNet.getDefaultNodeTable();
-		CyTable edgeTable = myNet.getDefaultEdgeTable();
-		Set<CyNode> nodesAdded = new HashSet<CyNode>();
-		Set<CyEdge> edgesPostponed = new HashSet<CyEdge>();
-		
-		int count = 0;
-		for (Record r : rs)
-		{
-			String src = "" + r.get("src");
-			String dest = "" + r.get("dest");
-
-			CyNode nodeSrc = createNodeIfNotExists(src, nodesAdded);
-			CyNode nodeDest = createNodeIfNotExists(dest, nodesAdded);
-
-			// set name attribute for new nodes
-			table.getRow(nodeSrc.getSUID()).set("id", src);
-			table.getRow(nodeDest.getSUID()).set("id", dest);
-
-			String interaction = "pp";
-			if (r.getMetaData().hasColumnName("interaction"))
-			{
-				interaction = "" + r.get("interaction"); 
-			}
-
-			CyEdge edge = createEdgeIfNotExists (nodeSrc, nodeDest, interaction, edgesPostponed);					
-			count++;
-			
-			createNetworkSecondPass(mq, r, nodeSrc, nodeDest, edge);					
-
-		}
-		
-		flushView();
-		
-		return count;
-	}
-	 */
-	
 	@Override
 	protected void setEdgeAttribute(CyEdge edge, String colName, Object value) 
 	{

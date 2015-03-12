@@ -103,28 +103,28 @@ WHERE
 ]]><AskBefore key="DISEASENAME"/></Query> 
 	<Query title="Search for a GO identifier" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
 PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX fn: <http://www.w3.org/2005/xpath-functions#>
 SELECT distinct ?src  ?label ("GO" AS ?type)
 WHERE 
 {
     SERVICE <http://beta.sparql.uniprot.org/> {
         GRAPH <http://beta.sparql.uniprot.org/go/> {
-		?src <http://www.w3.org/2004/02/skos/core#prefLabel> ?label .
-		?src <http://www.w3.org/2004/02/skos/core#exactMatch> ?match .
-		FILTER (?match IN (<http://www.geneontology.org/go#${GOID}>)) .       
-	}    
+			?src rdfs:label ?label .
+			FILTER (?src IN (<http://purl.obolibrary.org/obo/${GOID}>)) .       
+		}
     }  
 }
 ]]><AskBefore key="GOID"/></Query>
 	<Query title="Search for a GO term" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
 PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT distinct ?src ?label ("GO" AS ?type)
 WHERE
 {
     SERVICE <http://beta.sparql.uniprot.org/> {
         GRAPH <http://beta.sparql.uniprot.org/go/> {
-			?src <http://www.w3.org/2004/02/skos/core#prefLabel> ?label.
-		  	?src <http://www.w3.org/2004/02/skos/core#exactMatch> ?match .
+			?src rdfs:label ?label.
 			FILTER (regex(?label, "${GOTERM}", "i")) .
         }
     }
@@ -231,26 +231,6 @@ WHERE
 		FILTER (?src IN (${ID|uri-list})) .   
     }
 }
-]]><Context key="type" value="pathway"/></Query>
-	<Query title="??? Find reactions contained in this reactome pathway" type="QUERY_NODE_CONTEXT"><![CDATA[
-PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-SELECT DISTINCT ?src ?dest ?dest_label ("metabolite" AS ?dest_type) ("metabolite-to-pathway" AS ?interaction) ("reactome" AS ?provenance) 
-WHERE 
-{
-    SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
-
-		FILTER (?src IN (${ID|uri-list})) .
-		?src a biopax3:Pathway .  
-		?src biopax3:pathwayComponent ?reaction . 
-		?reaction a biopax3:BiochemicalReaction . 
-		?reaction ?pred ?sm .
-	  	FILTER (?pred IN (biopax3:left, biopax3:right)) .
-	  	?sm biopax3:displayName ?dest_label .	    
-		?sm biopax3:entityReference ?dest .
-	  	?dest biopax3:xref [ biopax3:db "ChEBI"^^xsd:string ] .
-    }
-}    
 ]]><Context key="type" value="pathway"/></Query>
 	<Query title="Find super-pathways" type="QUERY_NODE_CONTEXT"><![CDATA[
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -508,11 +488,12 @@ SELECT DISTINCT ?gene ?ortholog ?orthologSpecies ?dest {	# http://wwwdev.ebi.ac.
 ]]><TODO this is currently a development endpoint that is not reliable: check back later here to see if promoted to production <Context key="type" value="gene"/></Query>-->
 	<Query title="find GO terms for protein" type="QUERY_NODE_CONTEXT"><![CDATA[
 PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT distinct ?src ?dest ?dest_label ("GO" AS ?dest_type) ("Uniprot" AS ?provenance) ("GO annotation" AS ?interaction)
 WHERE
 {
     SERVICE <http://beta.sparql.uniprot.org/> {
-		?dest <http://www.w3.org/2004/02/skos/core#prefLabel> ?dest_label .
+		?dest rdfs:label ?dest_label .
 		?dest <http://purl.uniprot.org/core/database> <http://purl.uniprot.org/database/go> .
 		FILTER (?src IN (${ID|uri-list})) . 
 		?src <http://purl.uniprot.org/core/classifiedWith> ?dest .
@@ -542,30 +523,32 @@ WHERE
 ]]><Context key="type" value="GO"/></Query>
 	<Query title="find parent GO terms" type="QUERY_NODE_CONTEXT"><![CDATA[
 PREFIX up: <http://purl.uniprot.org/core/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT distinct ?src ?dest ?dest_label ("GO" AS ?dest_type) ("has-parent" AS ?interaction)
 WHERE
 {
     SERVICE <http://beta.sparql.uniprot.org/> {
         GRAPH <http://beta.sparql.uniprot.org/go/> {
-			?src <http://www.w3.org/2004/02/skos/core#prefLabel> ?label.
+			?src rdfs:label ?label.
 			FILTER (?src IN (${ID|uri-list})) .
-          	?src <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?dest .
-          	?dest <http://www.w3.org/2004/02/skos/core#prefLabel> ?dest_label.
+          	?src rdfs:subClassOf ?dest .
+          	?dest rdfs:label ?dest_label.
         }
     }
 }
 ]]><Context key="type" value="GO"/></Query>
 	<Query title="find child GO terms" type="QUERY_NODE_CONTEXT"><![CDATA[
-PREFIX up: <http://purl.uniprot.org/core/> 
+PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
 SELECT distinct ?src ?dest ?dest_label ("GO" AS ?dest_type) ("has-parent" AS ?interaction)
 WHERE
 {
     SERVICE <http://beta.sparql.uniprot.org/> {
         GRAPH <http://beta.sparql.uniprot.org/go/> {
-			?src <http://www.w3.org/2004/02/skos/core#prefLabel> ?label.
+			?src rdfs:label ?label.
 			FILTER (?src IN (${ID|uri-list})) .
-          	?src <http://www.w3.org/2004/02/skos/core#narrower> ?dest .
-          	?dest <http://www.w3.org/2004/02/skos/core#prefLabel> ?dest_label.
+          	?dest rdfs:subClassOf ?src  .
+          	?dest rdfs:label ?dest_label.
         }
     }
 }
@@ -650,12 +633,12 @@ WHERE
 ]]><Context key="type" value="Protein"/></Query>
 	<Param key="PROTNAME" val="PSMB1" />
 	<Param key="UNIPROTID" val="P60174" />
-	<Param key="DISEASENAME" val="Lung" />
+	<Param key="DISEASENAME" val="Lung cancer" />
 	<Param key="GENENAME" val="TP53" />
 	<Param key="GENEID" val="3643" />
 	<Param key="ID" val="http://purl.uniprot.org/uniprot/P42336" />
 	<Param key="PWYNAME" val="Signaling by BMP" />
-	<Param key="GOID" val="GO:0000001" />
+	<Param key="GOID" val="GO_0000001" />
 	<Param key="GOTERM" val="glycolysis" />
 	<Param key="PUBURI" val="http://identifiers.org/pubmed/16859172" />
 	<Param key="CONFIDENCE" val="20" />

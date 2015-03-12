@@ -1,8 +1,8 @@
-/com.generalbioinformatics*.jar
+/*.jar
 /.classpath
 /.project
 /.settings/
+/.gradle/
 /bin/
 /build/
-/ivycache/
 build.properties
