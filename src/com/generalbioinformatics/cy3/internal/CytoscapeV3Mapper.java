@@ -9,6 +9,7 @@ import java.awt.Font;
 import java.awt.Paint;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,8 +28,11 @@ import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.session.CyNetworkNaming;
+import org.cytoscape.view.layout.CyLayoutAlgorithm;
+import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.model.View;
 import org.cytoscape.view.model.VisualLexicon;
 import org.cytoscape.view.model.VisualProperty;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
@@ -40,6 +44,8 @@ import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
+import org.cytoscape.work.SynchronousTaskManager;
+import org.cytoscape.work.TaskIterator;
 
 import com.generalbioinformatics.rdf.gui.AbstractMarrsMapper;
 import com.generalbioinformatics.rdf.gui.MarrsProject;
@@ -336,10 +342,47 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	protected void finalizeNetworkAddition(Set<CyNode> nodesAdded,
 			Set<CyEdge> edgesPostPoned) 
 	{
-		// TODO Auto-generated method stub
+		// necessary to flush events, otherwise there are no views to lay out.
+		CyEventHelper eventHelper = adapter.getCyEventHelper();
+		eventHelper.flushPayloadEvents(); // will cause node views to be created...
+
+
+		// two possible layout methods. Hand-coded or using official cytoscape layouts. 
+		// tried several official layouts, the only that seems to work well enough is "grid".
+		doSimpleGridLayout(nodesAdded);
+		// doOffficialLayout(nodesAdded);
 		
+		myView.updateView();
 	}
 
+	/*
+	private void doOffficialLayout(Set<CyNode> nodesAdded) 
+	{
+		Set<View<CyNode>> viewSet = new HashSet<View<CyNode>>();
+		
+		for (CyLayoutAlgorithm i : adapter.getCyLayoutAlgorithmManager().getAllLayouts())
+		{
+			System.out.println (i.getName());
+		}
+		
+		CyLayoutAlgorithm layout = adapter.getCyLayoutAlgorithmManager().getLayout("grid");
+		if (layout == null) layout = adapter.getCyLayoutAlgorithmManager().getDefaultLayout();
+		
+		assert (layout != null);
+		for (CyNode node : nodesAdded)
+		{
+			View<CyNode> view = myView.getNodeView(node);
+			viewSet.add(view);
+		}
+		TaskIterator itr = layout.createTaskIterator(myView, layout.getDefaultLayoutContext(), viewSet, null);
+
+		adapter.getTaskManager().execute(itr);
+		
+		SynchronousTaskManager<?> synTaskMan = adapter.getCyServiceRegistrar().getService(SynchronousTaskManager.class);
+		synTaskMan.execute(itr);
+	}
+	*/
+	
 	@Override
 	protected void copyNodeCoordinates() 
 	{
@@ -363,6 +406,33 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 			setNodeAttribute(node, "id", key);
 			nodesAdded.add (node);
 			return node;
+		}
+	}
+
+	private void doSimpleGridLayout(Set<CyNode> nodesAdded) {
+		double x = 0;
+		double y = 0;
+		
+		int rowSize = (int)Math.ceil(Math.sqrt (nodesAdded.size()));
+		int count = 0;
+		
+		final double INTERDISTANCE = 50;
+		
+		for (CyNode node : nodesAdded)
+		{
+			View<CyNode> view = myView.getNodeView(node);
+			view.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
+			view.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y);
+			
+			if ((++count) % rowSize == 0)
+			{
+				x = 0;
+				y += INTERDISTANCE;
+			}
+			else
+			{
+				x += INTERDISTANCE;
+			}
 		}
 	}
 
