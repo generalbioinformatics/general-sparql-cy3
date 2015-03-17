@@ -97,7 +97,7 @@ public class CyActivator extends AbstractCyActivator
 			propsFile.getParentFile().mkdirs();
 			
 			Properties defaultValues = new Properties();
-			defaultValues.put (MarrsPreference.MARRS_DRIVER, "Empty Jena Model");
+			defaultValues.put (MarrsPreference.MARRS_DRIVER.name(), "Empty Jena Model");
 			prefs = new PreferenceManager(propsFile, defaultValues);
 			prefs.load();
 
