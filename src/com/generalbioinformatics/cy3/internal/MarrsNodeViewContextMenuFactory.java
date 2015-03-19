@@ -5,6 +5,7 @@
 package com.generalbioinformatics.cy3.internal;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -36,12 +37,14 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 	{
 		private String id;
 		private MarrsQuery mq;
+		private CyNode clickedNode;
 		
-		QueryAction(MarrsQuery mq, String id)
+		QueryAction(MarrsQuery mq, CyNode clickedNode, String id)
 		{
 			putValue(AbstractAction.NAME, mq.getTitle());
 			this.mq = mq;
 			this.id = id;
+			this.clickedNode = clickedNode;
 		}
 
 		@Override
@@ -49,13 +52,21 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 		{
 			MarrsProject project = projectMgr.getProject();
 			CyNetwork myNet = mapper.createOrGetNetwork();
-			List<CyNode> selectedNodes = CyTableUtil.getNodesInState(myNet,"selected",true);
+			
+			// active nodes is the union of selected nodes and the right-clicked node.
+			List<CyNode> activeNodes = new ArrayList<CyNode>();
+			activeNodes.addAll (CyTableUtil.getNodesInState(myNet,"selected",true));
+			if (!activeNodes.contains (clickedNode))
+			{
+				activeNodes.add (clickedNode);
+			}
+			
 			CyTable nodeTable = myNet.getDefaultNodeTable();
 			
 			StringBuilder builder = new StringBuilder();
 			String sep = "<";
 			
-			for (CyNode n : selectedNodes)
+			for (CyNode n : activeNodes)
 			{
 				String nid = nodeTable.getRow(n.getSUID()).get("id", String.class);
 				builder.append (sep);
@@ -70,10 +81,10 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 				q = project.getSubstitutedQuery(mq);
 				mapper.createNetwork(q, mq);
 			} catch (MarrsException e2) {
-				JOptionPane.showMessageDialog(frame, "Error preparing query", e2.getMessage(), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, e2.getMessage(), "Error preparing query", JOptionPane.ERROR_MESSAGE);
 			}
 			catch (StreamException e1) {
-				JOptionPane.showMessageDialog(frame, "Error executing query", e1.getMessage(), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, e1.getMessage(), "Error executing query", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		
@@ -125,7 +136,7 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 					
 					if (nodeMatchesContext)
 					{
-						submenu.add(new QueryAction(q, row.get("id", String.class)));
+						submenu.add(new QueryAction(q, node, row.get("id", String.class)));
 					}
 				}
 			}							
