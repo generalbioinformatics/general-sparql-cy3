@@ -288,19 +288,6 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 			myView.updateView();
 		}
 	}
-	
-	@Override
-	public int addAttributesMatrix(String q) throws StreamException 
-	{
-		RecordStream rs = conMgr.getConnection().sparqlSelect(q);
-		int count = 0;
-		for (Record r : rs)
-		{
-			count++;
-			//TODO .. create nodes... add attributes...
-		}
-		return count;
-	}
 
 	@Override
 	public JFrame getFrame()

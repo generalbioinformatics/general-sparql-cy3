@@ -6,8 +6,10 @@ package com.generalbioinformatics.cy3.internal;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
@@ -15,6 +17,7 @@ import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 
 import nl.helixsoft.recordstream.StreamException;
+import nl.helixsoft.util.StringUtils;
 
 import org.cytoscape.application.swing.CyMenuItem;
 import org.cytoscape.application.swing.CyNodeViewContextMenuFactory;
@@ -29,6 +32,7 @@ import org.cytoscape.view.model.View;
 import com.generalbioinformatics.rdf.gui.MarrsException;
 import com.generalbioinformatics.rdf.gui.MarrsProject;
 import com.generalbioinformatics.rdf.gui.MarrsQuery;
+import com.generalbioinformatics.rdf.gui.ProjectDlg;
 import com.generalbioinformatics.rdf.gui.ProjectManager;
 
 public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFactory //, ActionListener
@@ -53,39 +57,60 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 			MarrsProject project = projectMgr.getProject();
 			CyNetwork myNet = mapper.createOrGetNetwork();
 			
-			// active nodes is the union of selected nodes and the right-clicked node.
-			List<CyNode> activeNodes = new ArrayList<CyNode>();
-			activeNodes.addAll (CyTableUtil.getNodesInState(myNet,"selected",true));
-			if (!activeNodes.contains (clickedNode))
+			String filter = project.getQueryParameterFilter(mq, "ID");			
+			if ("uri-list".equals (filter))
 			{
-				activeNodes.add (clickedNode);
+				// active nodes is the union of selected nodes and the right-clicked node.
+				List<CyNode> activeNodes = new ArrayList<CyNode>();
+				activeNodes.addAll (CyTableUtil.getNodesInState(myNet,"selected",true));
+				if (!activeNodes.contains (clickedNode))
+				{
+					activeNodes.add (clickedNode);
+				}
+				
+				CyTable nodeTable = myNet.getDefaultNodeTable();
+				
+				StringBuilder builder = new StringBuilder();
+				String sep = "<";
+			
+				for (CyNode n : activeNodes)
+				{
+					String nid = nodeTable.getRow(n.getSUID()).get("id", String.class);
+					builder.append (sep);
+					builder.append (nid);
+					sep = ">, <";
+				}
+				builder.append (">");
+				
+				project.setQueryParameter("ID", builder.toString());
+			}
+			else if ("uri".equals(filter))
+			{
+				project.setQueryParameter("ID", "<" + id + ">");
+			}
+			else if ("uri-bracketed".equals(filter))
+			{
+				project.setQueryParameter("ID", "<" + id + ">");
+			}
+			else
+			{
+				project.setQueryParameter("ID", id);
 			}
 			
-			CyTable nodeTable = myNet.getDefaultNodeTable();
-			
-			StringBuilder builder = new StringBuilder();
-			String sep = "<";
-			
-			for (CyNode n : activeNodes)
-			{
-				String nid = nodeTable.getRow(n.getSUID()).get("id", String.class);
-				builder.append (sep);
-				builder.append (nid);
-				sep = ">, <";
-			}
-			builder.append (">");
-			
-			project.setQueryParameter("ID", builder.toString());
-			String q;
+			String qtext;
 			try {
-				q = project.getSubstitutedQuery(mq);
-				mapper.createNetwork(q, mq);
+				qtext = project.getSubstitutedQuery(mq);
+				int count = ProjectDlg.doQuery(mapper, qtext, mq);
+				if (count == 0)
+					JOptionPane.showMessageDialog(frame, "Zero results");
+				
 			} catch (MarrsException e2) {
-				JOptionPane.showMessageDialog(frame, e2.getMessage(), "Error preparing query", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, "<html>Error fetching results<br>" + StringUtils.escapeHtml(e2.getMessage()), "Error preparing query", JOptionPane.ERROR_MESSAGE);
 			}
 			catch (StreamException e1) {
-				JOptionPane.showMessageDialog(frame, e1.getMessage(), "Error executing query", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, "<html>Error fetching results<br>" + StringUtils.escapeHtml(e1.getMessage()), "Error executing query", JOptionPane.ERROR_MESSAGE);
 			}
+			System.out.println ("Query done");
 		}
 		
 	}
