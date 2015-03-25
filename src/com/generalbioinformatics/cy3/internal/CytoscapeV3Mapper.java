@@ -7,17 +7,12 @@ package com.generalbioinformatics.cy3.internal;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Paint;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JFrame;
 
-import nl.helixsoft.recordstream.Record;
-import nl.helixsoft.recordstream.RecordStream;
-import nl.helixsoft.recordstream.StreamException;
 import nl.helixsoft.util.ObjectUtils;
 
 import org.cytoscape.app.CyAppAdapter;
@@ -28,8 +23,6 @@ import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.session.CyNetworkNaming;
-import org.cytoscape.view.layout.CyLayoutAlgorithm;
-import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.model.View;
@@ -44,8 +37,6 @@ import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
-import org.cytoscape.work.SynchronousTaskManager;
-import org.cytoscape.work.TaskIterator;
 
 import com.generalbioinformatics.rdf.gui.AbstractMarrsMapper;
 import com.generalbioinformatics.rdf.gui.MarrsProject;
@@ -118,8 +109,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 			myNet = adapter.getCyNetworkFactory().createNetwork();
 			myNet.getRow(myNet).set(CyNetwork.NAME, cyNetworkNaming.getSuggestedNetworkTitle("General SPARQL"));
 			adapter.getCyNetworkManager().addNetwork(myNet);
-			
-			createNodeAttributeIfNotExists("id");			
+			createNodeAttributeIfNotExists("id");
 			
 			myView = null;
 		}
@@ -275,8 +265,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	}
 	 */
 	
-	@Override
-	protected void flushView()
+	private void flushView()
 	{
 		CyEventHelper eventHelper = adapter.getCyEventHelper();
 		eventHelper.flushPayloadEvents(); // will cause node views to be created...
@@ -326,20 +315,26 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	}
 
 	@Override
-	protected void finalizeNetworkAddition(Set<CyNode> nodesAdded,
-			Set<CyEdge> edgesPostPoned) 
+	protected void finalizeNetworkAddition(final Set<CyNode> nodesAdded,
+			final Set<CyEdge> edgesPostPoned) 
 	{
+		if (nodesAdded.size() == 0) return;
+		
 		// necessary to flush events, otherwise there are no views to lay out.
 		CyEventHelper eventHelper = adapter.getCyEventHelper();
 		eventHelper.flushPayloadEvents(); // will cause node views to be created...
-
-
+		
 		// two possible layout methods. Hand-coded or using official cytoscape layouts. 
 		// tried several official layouts, the only that seems to work well enough is "grid".
+		
 		doSimpleGridLayout(nodesAdded);
 		// doOffficialLayout(nodesAdded);
+		copyNodeCoordinates(); // TODO - merge with simple grid layout... 
 		
 		myView.updateView();
+		// TODO Auto-generated method stub
+
+		flushView();
 	}
 
 	/*
@@ -370,7 +365,6 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	}
 	*/
 	
-	@Override
 	protected void copyNodeCoordinates() 
 	{
 		// TODO Auto-generated method stub		
@@ -396,7 +390,8 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		}
 	}
 
-	private void doSimpleGridLayout(Set<CyNode> nodesAdded) {
+	private void doSimpleGridLayout(Set<CyNode> nodesAdded) 
+	{		
 		double x = 0;
 		double y = 0;
 		
@@ -405,11 +400,21 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		
 		final double INTERDISTANCE = 50;
 		
+		int missingCount = 0;
+		
 		for (CyNode node : nodesAdded)
 		{
-			View<CyNode> view = myView.getNodeView(node);
-			view.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
-			view.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y);
+			View<CyNode> nodeView = myView.getNodeView(node);
+
+			if (nodeView != null)
+			{
+				nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
+				nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y);
+			}
+			else
+			{
+				missingCount++;
+			}
 			
 			if ((++count) % rowSize == 0)
 			{
@@ -421,6 +426,10 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 				x += INTERDISTANCE;
 			}
 		}
+
+		// TODO what strange magic is this? - even though we always call flushPayloadEvents, some
+		// node views seem not to be created yet at this time.
+		if (missingCount > 0) System.out.println (missingCount + " node views were not yet created...");
 	}
 
 	@Override
