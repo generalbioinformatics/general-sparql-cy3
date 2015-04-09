@@ -500,6 +500,20 @@ WHERE
     } 	
 }
 ]]><Context key="type" value="Protein"/></Query>
+	<Query title="add GO terms as attribute" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT distinct ?src ?goid_list ?golabel_list
+WHERE
+{
+    SERVICE <http://beta.sparql.uniprot.org/> {
+		?goid_list rdfs:label ?golabel_list .
+		?goid_list <http://purl.uniprot.org/core/database> <http://purl.uniprot.org/database/go> .
+		FILTER (?src IN (${ID|uri-list})) . 
+		?src <http://purl.uniprot.org/core/classifiedWith> ?goid_list .
+    } 	
+}
+]]><Context key="type" value="Protein"/></Query>
 	<Query title="find proteins for GO term" type="QUERY_NODE_CONTEXT"><![CDATA[
 PREFIX up:<http://purl.uniprot.org/core/> 
 PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 

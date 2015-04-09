@@ -7,13 +7,17 @@ package com.generalbioinformatics.cy3.internal;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Paint;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JFrame;
 
 import nl.helixsoft.util.ObjectUtils;
+import nl.helixsoft.util.StringUtils;
 
 import org.cytoscape.app.CyAppAdapter;
 import org.cytoscape.app.swing.CySwingAppAdapter;
@@ -87,11 +91,35 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		{
 			if (table.getColumn(colName) == null)
 			{
-				table.createColumn(colName, value.getClass(), true);
+				if (colName.endsWith("_list"))
+				{
+					table.createListColumn(colName, String.class, true);
+				}
+				else
+				{
+					table.createColumn(colName, String.class, true);
+				}
 			}
 			try
 			{
-				table.getRow(node.getSUID()).set(colName, value);
+				if (colName.endsWith("_list"))
+				{
+					List<String> data = table.getRow(node.getSUID()).getList(colName, String.class);
+					if (data == null)
+					{
+						data = new ArrayList<String>();
+						data.add(StringUtils.safeToString(value));
+						table.getRow(node.getSUID()).set(colName, data);
+					}
+					else
+					{
+						data.add(StringUtils.safeToString(value));
+					}
+				}
+				else
+				{
+					table.getRow(node.getSUID()).set(colName, value);
+				}
 			}
 			catch (IllegalStateException e)
 			{
