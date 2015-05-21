@@ -94,7 +94,7 @@ WHERE
         WHERE {
 		  	?diseaseAnnots <http://purl.uniprot.org/core/disease> ?diseaseNo .
 		  	?diseaseNo skos:prefLabel ?label .
-		  	FILTER (regex(?label, "${DISEASENAME}", "i")) .
+		  	FILTER (regex(?label, "${DISEASENAME|literal}", "i")) .
 			?diseaseNo rdfs:seeAlso ?src .
 			?src up:database <http://purl.uniprot.org/database/MIM> .
         }
@@ -149,7 +149,7 @@ WHERE
 	  	FILTER (regex(?label, ("${PWYNAME|literal}"), "i")) .
 	  	?src biopax3:organism ?taxonId .
         ?taxonId biopax3:name ?species .
-	FILTER  (?species IN ("Homo sapiens", "Mus musculus")) .
+	FILTER  (?species IN ("Homo sapiens"^^xsd:string, "Mus musculus"^^xsd:string)) .
     }
 }
 ]]><AskBefore key="PWYNAME"/></Query>
@@ -220,7 +220,7 @@ WHERE
 PREFIX up:<http://purl.uniprot.org/core/> 
 PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
 PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
-SELECT DISTINCT ?src ?dest ?dest_label ("reaction" AS ?dest_type) ?dest_species ("target-to-pathway" AS ?interaction) ("reactome" AS ?provenance)	
+SELECT DISTINCT ?src ?dest ?dest_label ("reaction" AS ?dest_type) ?dest_species ("reaction-to-pathway" AS ?interaction) ("reactome" AS ?provenance)	
 WHERE 
 {
     SERVICE <https://www.ebi.ac.uk/rdf/services/reactome/sparql> {
