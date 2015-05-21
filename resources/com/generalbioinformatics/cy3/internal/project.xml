@@ -645,6 +645,84 @@ WHERE
 	}
 }
 ]]><Context key="type" value="Protein"/></Query>
+<Query title="find experimental data from selected Array Atlas experiments for this protein" type="QUERY_NODE_MATRIX"><![CDATA[
+
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX atlas: <http://rdf.ebi.ac.uk/resource/atlas/>
+PREFIX atlasterms: <http://rdf.ebi.ac.uk/terms/atlas/>
+SELECT ?src ?column ?value
+WHERE
+{
+    	SERVICE <http://www.ebi.ac.uk/rdf/services/atlas/sparql> 
+    	{	
+    		FILTER (?experiment = <http://rdf.ebi.ac.uk/resource/atlas/E-GEOD-3526>)
+    		?experiment atlasterms:hasAnalysis ?analysis . 
+    		?analysis atlasterms:hasExpressionValue ?expression .
+    		?expression atlasterms:isMeasurementOf ?probe .
+    		?expression <http://semanticscience.org/resource/SIO_000300> ?value .
+    		?expression atlasterms:hasFactorValue ?factor .
+    		?factor atlasterms:propertyValue ?column .
+    		?probe atlasterms:dbXref ?src .
+    		FILTER (?src IN (${ID|uri-list}))
+    	}
+}
+
+]]><Context key="type" value="Protein"/></Query>
+<Query title="search experimental factor ontology by EFO identifier" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX atlas: <http://rdf.ebi.ac.uk/resource/atlas/>
+PREFIX atlasterms: <http://rdf.ebi.ac.uk/terms/atlas/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT ?src ("ExperimentalFactor" as ?type) ?label
+WHERE
+{
+    	SERVICE <http://www.ebi.ac.uk/rdf/services/atlas/sparql> 
+    	{	
+			?src a owl:Class .
+			?src rdfs:label ?label .
+			?src <http://www.ebi.ac.uk/efo/definition> ?definition .
+		 	FILTER (?src = <http://www.ebi.ac.uk/efo/${EFOID}>) .
+		}
+}
+]]><AskBefore key="EFOID"/></Query>
+<Query title="get parent factors" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX atlas: <http://rdf.ebi.ac.uk/resource/atlas/>
+PREFIX atlasterms: <http://rdf.ebi.ac.uk/terms/atlas/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT ?src ("ExperimentalFactor" as ?dest_type) ?dest ?dest_label ?dest_definition
+WHERE
+{
+    	SERVICE <http://www.ebi.ac.uk/rdf/services/atlas/sparql> 
+    	{
+			?src a owl:Class .
+			?dest a owl:Class .
+			?src rdfs:subClassOf ?dest .
+			?dest rdfs:label ?dest_label .
+			?dest <http://www.ebi.ac.uk/efo/definition> ?dest_definition .
+		 	FILTER (?src IN (${ID|uri-list})) .
+		}
+}
+]]><Context key="type" value="ExperimentalFactor"/></Query>
+<Query title="get child factors" type="QUERY_NODE_CONTEXT"><![CDATA[
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX atlas: <http://rdf.ebi.ac.uk/resource/atlas/>
+PREFIX atlasterms: <http://rdf.ebi.ac.uk/terms/atlas/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT ?src ("ExperimentalFactor" as ?dest_type) ?dest ?dest_label ?dest_definition
+WHERE
+{
+    	SERVICE <http://www.ebi.ac.uk/rdf/services/atlas/sparql> 
+    	{
+			?src a owl:Class .
+			?dest a owl:Class .
+			?dest rdfs:subClassOf ?src .
+			?dest rdfs:label ?dest_label .
+			?dest <http://www.ebi.ac.uk/efo/definition> ?dest_definition .
+		 	FILTER (?src IN (${ID|uri-list})) .
+		}
+}
+]]><Context key="type" value="ExperimentalFactor"/></Query>
 	<Param key="PROTNAME" val="PSMB1" />
 	<Param key="UNIPROTID" val="P60174" />
 	<Param key="DISEASENAME" val="Lung cancer" />
@@ -653,6 +731,8 @@ WHERE
 	<Param key="ID" val="http://purl.uniprot.org/uniprot/P42336" />
 	<Param key="PWYNAME" val="Signaling by BMP" />
 	<Param key="GOID" val="GO_0000001" />
+	<Param key="EFOID" val="EFO_0000914" />
+	<Param key="EFONAME" val="parietal lobe" />
 	<Param key="GOTERM" val="glycolysis" />
 	<Param key="PUBURI" val="http://identifiers.org/pubmed/16859172" />
 	<Param key="CONFIDENCE" val="20" />
