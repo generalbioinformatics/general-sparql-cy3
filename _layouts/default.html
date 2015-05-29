@@ -10,7 +10,7 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <title>General-sparql-cy3 by generalbioinformatics</title>
+    <title>{{ page.title }}</title>
   </head>
 
   <body>
@@ -18,36 +18,17 @@
       <div class="inner">
 
         <header>
-          <h1>General-sparql-cy3</h1>
-          <h2>General SPARQL app for Cytoscape 3</h2>
+          <h1>{{ page.title }}</h1>
         </header>
 
         <section id="downloads" class="clearfix">
-          <a href="https://github.com/generalbioinformatics/general-sparql-cy3/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/generalbioinformatics/general-sparql-cy3/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
           <a href="https://github.com/generalbioinformatics/general-sparql-cy3" id="view-on-github" class="button"><span>View on GitHub</span></a>
         </section>
 
         <hr>
 
         <section id="main_content">
-          <h1>
-<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h1>
-
-<p>The General SPARQL app lets you navigate the semantic web using an intuitive interface. The app is pre-configured to visualise public data from Reactome, Uniprot, HGNC, NCBI Taxonomy, Chembl and more. The app uses federated SPARQL queries in the back-end, which can be customized and extended. It can be made to work with any public or private RDF resource. </p>
-
-<p>The General SPARQL app is completely new way to present data from triplestores.</p>
-
-<h1>
-<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h1>
-
-<ul>
-<li>[[Installation]]</li>
-<li>[[User manual]]</li>
-<li>[[Developer manual]]</li>
-<li>[[About]]</li>
-<li>[[Links]]</li>
-</ul>
+        {{ content }}
         </section>
 
         <footer>
