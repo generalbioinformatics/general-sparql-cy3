@@ -105,17 +105,17 @@ The app can map SPARQL results to nodes, node attributes, edges and edge attribu
 * QUERY_NODE_ATTRIBUTE
   Node attribute queries map each row from the query result to a node. Each SPARQL binding determines a node attribute. The ?src binding is treated specially - this binding is used for the node identifier (creating new nodes as needed).
 
-  ![attribute query example](/images/table3.png)
+  ![attribute query example](images/table3.png)
      
 * QUERY_BACKBONE
   Network queries map each row from the query result to an edge. The edge is between two nodes identified as ?src and ?dest (creating new nodes as needed). Any binding that starts with ?src_xxx or ?dest_xxx are treated as node attributes, remaining bindings are treated as edge attributes.
 
-  ![network query example](/images/table1.png)
+  ![network query example](images/table1.png)
 
 * QUERY_NODE_MATRIX
   Matrix queries map each row from the query result to a node attribute, use the binding ?column to indicate which node attribute to use. Thus, the node attributes are not pre-determined but depend on the query results.
 
-  ![matrix query example](/images/table2.png)
+  ![matrix query example](images/table2.png)
 
 
 Up: [Home](index.html)

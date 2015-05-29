@@ -11,7 +11,7 @@ The General SPARQL app is completely new way to present data from triplestores.
 
 <div class="video">
     <figure>
-        <iframe width="640" height="480" src="//www.youtube.com/embed/ZSXtlrwnVss?rel=0" frameborder="0" allowfullscreen="1"> </iframe>
+        <iframe width="640" height="480" src="http://www.youtube.com/embed/ZSXtlrwnVss?rel=0" frameborder="0" allowfullscreen="1"> </iframe>
     </figure>
 </div>
 
