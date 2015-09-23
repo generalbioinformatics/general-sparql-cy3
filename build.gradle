@@ -2,7 +2,7 @@ import java.util.jar.JarEntry;
 
 apply plugin: 'java'
 
-def localRepo = 'file://' + new File(System.getProperty('user.home'), 'prg/bundle-repository').absolutePath
+def localRepo = 'file://' + new File(System.getProperty('user.home'), 'prg/bundle-repository2').absolutePath
 
 repositories {
 
@@ -12,20 +12,22 @@ repositories {
         url "http://code.cytoscape.org/nexus/content/repositories/releases/"
     }
 
-    ivy {
-    	url localRepo
-    	layout "pattern", {
-            artifact "[artifact]-[revision].[ext]"
-            ivy "[artifact]-[revision]-ivy.xml"
-        }
-    }
+	ivy {
+		name "local_bundle_repository"
+		url localRepo
+		layout "pattern", {
+	        ivy "[organisation]/[module]/[revision]/ivy.xml"
+	        artifact "[organisation]/[module]/[revision]/[artifact]-[revision].[ext]"
+	    }
+	}
+
 }
 
 configurations {
     
     // new configuration - just the embedded dependencies
-    releaseJars
-    
+    releaseJars.exclude module: 'openrdf-sesame-all'
+
     // make releaseJars also part of compilation classpath
     compile {
     	extendsFrom releaseJars
