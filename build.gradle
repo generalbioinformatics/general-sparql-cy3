@@ -2,7 +2,7 @@ import java.util.jar.JarEntry;
 
 apply plugin: 'java'
 
-def localRepo = 'file://' + new File(System.getProperty('user.home'), 'prg/bundle-repository2').absolutePath
+def localRepo = 'file://' + new File(System.getProperty('user.home'), 'prg/bundle-repository').absolutePath
 
 repositories {
 
@@ -35,6 +35,9 @@ configurations {
 }
 
 dependencies {
+    testCompile (
+    		'junit:junit:4+'
+    )
     releaseJars (
     		'com.springsource:com.springsource.org.jdom:1.1.0',
     		'com.generalbioinformatics:com.generalbioinformatics.rdf.gui:1.0+',
@@ -43,7 +46,7 @@ dependencies {
     		'jsyntaxpane:jsyntaxpane:0.9+',
     		'nl.helixsoft:nl.helixsoft.util:1.0.1',
     		'nl.helixsoft:nl.helixsoft.gui:1.0.1',
-    		'org.apache.jena:jena-all:2.12.+',
+    		'org.apache.jena:jena-arq:2.12.+',
     		'org.apache:commons-codec:1.5+',
     		'org.apache.felix:org.osgi.core:1.4+',
 			'com.googlecode.guava-osgi:guava-osgi:11.0.1',
@@ -54,16 +57,9 @@ dependencies {
     )
 }
 
-sourceSets {
-    main {
-        java {
-            srcDir 'src'
-        }
-		resources {
-			srcDir 'resources'
-		}
-	}
-}
+sourceSets.main.java.srcDirs = ['src']
+sourceSets.main.resources.srcDirs = ['resources']
+sourceSets.test.java.srcDirs = ['test']
 
 version = '1.11.' + new Date().format('yyMMdd')
 

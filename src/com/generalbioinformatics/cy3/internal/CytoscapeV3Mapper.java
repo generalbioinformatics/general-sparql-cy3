@@ -9,15 +9,11 @@ import java.awt.Font;
 import java.awt.Paint;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JFrame;
-
-import nl.helixsoft.util.ObjectUtils;
-import nl.helixsoft.util.StringUtils;
 
 import org.cytoscape.app.CyAppAdapter;
 import org.cytoscape.app.swing.CySwingAppAdapter;
@@ -45,6 +41,10 @@ import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import com.generalbioinformatics.rdf.gui.AbstractMarrsMapper;
 import com.generalbioinformatics.rdf.gui.MarrsProject;
 import com.generalbioinformatics.rdf.gui.TripleStoreManager;
+import com.generalbioinformatics.rdf.stream.RdfNode;
+
+import nl.helixsoft.util.ObjectUtils;
+import nl.helixsoft.util.StringUtils;
 
 public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 {
@@ -81,6 +81,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	@Override
 	protected void setNodeAttribute(CyNode node, String colName, Object value)
 	{
+		if (value instanceof RdfNode) { value = value.toString(); }
 		CyTable table = myNet.getDefaultNodeTable();
 		if ("label".equals(colName))
 		{
@@ -322,6 +323,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	protected void setEdgeAttribute(CyEdge edge, String colName, Object value) 
 	{
 		if (value == null) return; //ignore
+		if (value instanceof RdfNode) { value = value.toString(); }
 		
 		CyTable table = myNet.getDefaultEdgeTable();
 		if (table.getColumn(colName) == null)
