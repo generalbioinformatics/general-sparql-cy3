@@ -28,6 +28,7 @@ import com.generalbioinformatics.rdf.gui.MarrsException;
 import com.generalbioinformatics.rdf.gui.MarrsProject;
 import com.generalbioinformatics.rdf.gui.MarrsQuery;
 import com.generalbioinformatics.rdf.gui.ProjectDlg;
+import com.generalbioinformatics.rdf.gui.ProjectDlg.QueryStatus;
 import com.generalbioinformatics.rdf.gui.ProjectManager;
 
 import nl.helixsoft.recordstream.StreamException;
@@ -97,11 +98,9 @@ public class MarrsNodeViewContextMenuFactory implements CyNodeViewContextMenuFac
 			
 			String qtext;
 			try {
-				qtext = project.getSubstitutedQuery(mq);
-				int count = ProjectDlg.doQuery(mapper, qtext, mq);
-				if (count == 0)
+				QueryStatus result = ProjectDlg.run(mapper, project, frame, mq);
+				if (!result.userCancelled && (result.resultNum == 0))
 					JOptionPane.showMessageDialog(frame, "Zero results");
-				
 			} catch (MarrsException e2) {
 				JOptionPane.showMessageDialog(frame, "<html>Error fetching results<br>" + StringUtils.escapeHtml(e2.getMessage()), "Error preparing query", JOptionPane.ERROR_MESSAGE);
 			}

@@ -81,7 +81,12 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 	@Override
 	protected void setNodeAttribute(CyNode node, String colName, Object value)
 	{
+		// Turn URIs into strings
 		if (value instanceof RdfNode) { value = value.toString(); }
+		
+		// Turn Float into Double. Float not accepted by Cytoscape as column type.
+		if (value instanceof Float) { value = ((Number)value).doubleValue(); }
+		
 		CyTable table = myNet.getDefaultNodeTable();
 		if ("label".equals(colName))
 		{
@@ -90,6 +95,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 		}
 		else
 		{
+			// if the column doesn't yet exist, crate it first
 			if (table.getColumn(colName) == null)
 			{
 				if (colName.endsWith("_list"))
@@ -98,9 +104,24 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 				}
 				else
 				{
-					table.createColumn(colName, String.class, true);
+					Class<?> valueClass = value.getClass();
+					//NB: Float not accepted by Cytoscape, must be Double.
+					if (valueClass == Double.class ||
+						valueClass == Integer.class ||
+						valueClass == Boolean.class ||
+						valueClass == Long.class ||
+						valueClass == String.class)
+					{
+						table.createColumn(colName, valueClass, true);						
+					}
+					else
+					{
+						throw new IllegalStateException ("Unable to handle attribute values of class " + valueClass);
+					}
 				}
 			}
+			
+			
 			try
 			{
 				if (colName.endsWith("_list"))
@@ -119,6 +140,7 @@ public class CytoscapeV3Mapper extends AbstractMarrsMapper<CyNode, CyEdge>
 				}
 				else
 				{
+					// TODO: check for type mismatches?
 					table.getRow(node.getSUID()).set(colName, value);
 				}
 			}
