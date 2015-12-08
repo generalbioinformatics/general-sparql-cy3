@@ -723,7 +723,55 @@ WHERE
 		}
 }
 ]]><Context key="type" value="ExperimentalFactor"/><Test key="ID" value="&lt;http://www.ebi.ac.uk/efo/EFO_0000302&gt;"/></Query>
+
+<!-- *************************************************************
+     ******************** Wikidata  ****************************** -->
+
+<Query title="Search for drug on wikidata" type="QUERY_NODE_ATTRIBUTE"><![CDATA[
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX v: <http://www.wikidata.org/prop/statement/>
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+
+SELECT ?src ?label ?chembl ("Drug" as ?type) 
+WHERE
+{
+	SERVICE <https://query.wikidata.org/bigdata/namespace/wdq/sparql>
+	{
+		?src wdt:P592 ?chembl .
+		?src rdfs:label ?label .
+		FILTER (?label = "${DRUGNAME|literal}"@en)
+	}	
+}
+]]><AskBefore key="DRUGNAME"/></Query>
+
+<Query title="Find contra-indicated drugs on wikidata" type="QUERY_BACKBONE"><![CDATA[
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX v: <http://www.wikidata.org/prop/statement/>
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+
+SELECT ?src ?dest ?dest_chembl ?dest_label ("Drug" as ?dest_type) ("contra-indication" as ?interaction)
+WHERE 
+{
+	SERVICE <https://query.wikidata.org/bigdata/namespace/wdq/sparql>
+	{
+		?src wdt:P769 ?dest .
+		?dest wdt:P592 ?dest_chembl .
+		OPTIONAL  {
+			?dest rdfs:label ?dest_label . 
+			FILTER(lang(?dest_label) = "en") . 
+		}
+		FILTER (?src IN (${ID|uri-list}))
+	}
+}
+]]><Context key="type" value="Drug"/><Test key="ID" value="&lt;http://www.wikidata.org/entity/Q407431&gt;"/></Query>
+
+
 	<Param key="PROTNAME" val="PSMB1" />
+	<Param key="DRUGNAME" val="Warfarin" />
 	<Param key="UNIPROTID" val="P60174" />
 	<Param key="DISEASENAME" val="Lung cancer" />
 	<Param key="GENENAME" val="TP53" />
