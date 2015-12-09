@@ -746,14 +746,14 @@ WHERE
 }
 ]]><AskBefore key="DRUGNAME"/></Query>
 
-<Query title="Find contra-indicated drugs on wikidata" type="QUERY_BACKBONE"><![CDATA[
+<Query title="Find drug-drug interactions from wikidata (wikipedia)" type="QUERY_BACKBONE"><![CDATA[
 PREFIX wd: <http://www.wikidata.org/entity/>
 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 PREFIX p: <http://www.wikidata.org/prop/>
 PREFIX v: <http://www.wikidata.org/prop/statement/>
 PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
 
-SELECT ?src ?dest ?dest_chembl ?dest_label ("Drug" as ?dest_type) ("contra-indication" as ?interaction)
+SELECT ?src ?dest ?dest_chembl ?dest_label ("Drug" as ?dest_type) ("drug-drug-interaction" as ?interaction) ("wikidata / wikipedia" as ?provenance)
 WHERE 
 {
 	SERVICE <https://query.wikidata.org/bigdata/namespace/wdq/sparql>
@@ -769,6 +769,33 @@ WHERE
 }
 ]]><Context key="type" value="Drug"/><Test key="ID" value="&lt;http://www.wikidata.org/entity/Q407431&gt;"/></Query>
 
+<!-- *************************************************************
+     ******************** Wikipathways *************************** -->
+
+<Query title="Get pathways for this gene from wikipathways" type="QUERY_BACKBONE"><![CDATA[
+PREFIX wp:      <http://vocabularies.wikipathways.org/wp#>
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX dc: 		<http://purl.org/dc/elements/1.1/>
+
+SELECT DISTINCT (<${ID}> as ?src) (?pathway AS ?dest) ?dest_label ("wikipathways" as ?provenance) ("member-of-pathway" as ?interaction)
+WHERE {
+	SERVICE <http://sparql.wikipathways.org/> {
+		?geneProduct a wp:GeneProduct . 
+		?pathway dc:title ?dest_label .
+		?geneProduct dcterms:isPartOf ?pathway .
+		?pathway a wp:Pathway .
+		?geneProduct  dc:identifier ?xref .
+		
+		# Namespace fixing. TODO this might be better done as a custom filter, because this way no IN set allowed
+		FILTER (?xref2 = IRI(REPLACE ("${ID}", "http://purl.uniprot.org/geneid/", "http://identifiers.org/ncbigene/"))) .
+		?xref wp:bdbEntrezGene ?xref2 .
+	}
+}
+]]><Context key="type" value="gene"/><Test key="ID" value="&lt;http://identifiers.org/ncbigene/3643&gt;"/></Query>
+
+<!-- *************************************************************
+     ********************     END      *************************** -->
 
 	<Param key="PROTNAME" val="PSMB1" />
 	<Param key="DRUGNAME" val="Warfarin" />
