@@ -792,7 +792,7 @@ WHERE {
 		?xref wp:bdbEntrezGene ?xref2 .
 	}
 }
-]]><Context key="type" value="gene"/><Test key="ID" value="&lt;http://identifiers.org/ncbigene/3643&gt;"/></Query>
+]]><Context key="type" value="gene"/><Test key="ID" value="http://purl.uniprot.org/geneid/3643"/></Query>
 
 <!-- *************************************************************
      ********************     END      *************************** -->
