@@ -1,8 +1,12 @@
 import java.util.jar.JarEntry;
 
 apply plugin: 'java'
+apply plugin: 'eclipse'
 
-def localRepo = 'file://' + new File(System.getProperty('user.home'), 'prg/bundle-repository').absolutePath
+// override localbundles property with -Plocalbundles=..., ./gradle.properties or ~/.gradle/gradle.properties
+// See: https://docs.gradle.org/current/userguide/build_environment.html
+def localRepo = project.hasProperty('localbundles') ? project['localbundles'] : 
+	'file://' + new File(System.getProperty('user.home'), 'prg/bundle-repository').absolutePath
 
 repositories {
 

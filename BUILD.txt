@@ -1,0 +1,81 @@
+How to build
+------------
+
+`gradle jar`
+
+The resulting artifact in build/libs/general-sparql-cy3-VERSION.YYMMDD.jar
+can be installed in Cytoscape 3.+ as follows:
+
+Run Cytoscape 3.+
+In the menu, click Apps->App Manager
+Click Install from file...
+Select general-sparql-cy3-VERSION.YYMMDD.jar
+
+However, if you plan to frequently edit / debug the plugin, you may prefer
+to use the symlinking mechanism described below.
+
+How to debug
+------------
+
+Step 1:
+	Download and install Cytoscape 3.+
+	In the example below it is installed in ~/opt/Cytoscape_v3.2.1, but that can of course be adjusted.
+
+Step 2: 
+	Check out the source code of the cytoscape plugin:
+	git clone https://github.com/generalbioinformatics/general-sparql-cy3.git
+
+Step 3: 
+	From the plugin working directory, set up an eclipse project with `gradle eclipse`
+	Import this project in eclipse
+
+Step 4:
+	Switch back to the command line and run `gradle copyJar`. 
+	This will place the plugin in a predictable place with a predictable name. 
+	(gradle Jar will update the name with a timestamp so it can't be symlinked to)
+
+Step 5:
+	Now you can create a symlink to link the plugin to general-sparql-cy3-LATEST.jar
+	ln -s ~/CytoscapeConfiguration/3/apps/installed/general-sparql-cy3-LATEST.jar -> /home/martijn/prg/cyto/cy3-general-sparql/general-sparql-cy3-LATEST.jar
+
+Step 6:
+	Now you may run cytoscape in debug mode.
+	
+	while ((1)); do gradle copyJar; pushd ~/opt/Cytoscape_v3.2.1; ./cytoscape.sh debug; popd; done
+
+	This will run (in a loop) cytoscape in debug mode. It will not start Cytoscape yet - this will happen in the next step.
+
+Step 7:
+
+	From eclipse, set up a debug configuration of type "Remote java application", with the following settings:
+	* Project: the cytoscape plugin project you just created
+	* Host : localhost
+	* Port : 12345
+
+	If you start this debug configuration, Cytoscape will run. You can now set breakpoints, inspect variables, etc.
+
+
+
+How to test
+-----------
+
+gradle test
+
+-> This will attempt to run all the queries programmed into the default project 
+	against public sparql endpoints. It will check if the queries return more than 0 results.
+	
+-> recommended to set up a jenkins job to run this periodically (not just on SCM trigger)
+
+
+How to publish a new version
+----------------------------
+
+* Run `gradle jar`. The new artifact will be in build/libs/general-sparql-cy3-VERSION.YYMMDD.jar
+* Go to http://apps.cytoscape.org/apps/generalsparql
+* Sign in (set up an account if you haven't got one)
+* Click "Editor actions" -> "Submit a 3.0 app release"
+* Upload general-sparql-cy3-VERSION.YYMMDD.jar - the server will analyse the contents and recognise version and other details.
+* After release, edit the release notes online
+
+
+
